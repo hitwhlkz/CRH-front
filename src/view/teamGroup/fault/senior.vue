@@ -1,0 +1,516 @@
+<template>
+    <div>
+        <!-- 筛选 -->
+        <el-form :inline="true" :model="pageparm" class="user-search" ref="searchForm">
+            <el-form-item label="处理结果：" prop="result">
+                <el-select v-model="pageparm.result" placeholder="请选择处理结果">
+                    <el-option label="未处理" value="未处理"></el-option>
+                    <el-option label="已处理" value="已处理"></el-option>
+                    <el-option label="长期跟踪" value="长期跟踪"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="交修日期">
+                <el-col :span="11">
+                    <el-date-picker v-model="timeList" type="daterange" range-separator="至" start-placeholder="开始日期"
+                        end-placeholder="结束日期">
+                    </el-date-picker>
+                </el-col>
+            </el-form-item>
+            <el-form-item label="车号" prop="carNumber">
+                <el-select multiple filterable v-model="carNumbers" placeholder="请选择车号">
+                    <el-option v-for="item in carNumberList" :key="item.value" :label="item.value" :value="item.value">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="车箱号" prop="carBodyNumber">
+                <el-input size="small" v-model="pageparm.carBodyNumber" placeholder="输入车厢号"></el-input>
+            </el-form-item>
+            <el-form-item label="故障描述：" prop="faultDescription">
+                <el-input size="small" v-model="pageparm.faultDescription" placeholder="输入故障描述"></el-input>
+            </el-form-item>
+            <el-form-item label="故障来源：" prop="source">
+                <el-input size="small" v-model="pageparm.source" placeholder="输入故障来源"></el-input>
+            </el-form-item>
+            <el-form-item label="处理方法：" prop="method">
+                <el-input size="small" v-model="pageparm.method" placeholder="输入处理方法"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button size="small" type="primary" icon="el-icon-search" @click="search()">搜索</el-button>
+                <el-button size="small" type="primary" icon="el-icon-refresh-right"
+                    @click="resetForm('searchForm')">重置</el-button>
+                <el-button size="small" type="warning" icon="el-icon-star-off" @click="exportExcel()">导出</el-button>
+            </el-form-item>
+        </el-form>
+
+        <!-- 表格 -->
+        <el-table :data="tableData" style="width: 100%" border height="700">
+            <el-table-column type="index" label="序号" align="center" width="80" :index="indexMethod" fixed></el-table-column>
+            <el-table-column prop="deliveryDate" label="交修日期" width="100" align="center"></el-table-column>
+            <el-table-column prop="carNumber" label="车号" width="70" align="center"></el-table-column>
+            <el-table-column prop="carBodyNumber" label="车厢号" align="center"></el-table-column>
+            <el-table-column prop="faultDescription" label="故障描述" width="180" align="center"></el-table-column>
+            <el-table-column prop="teamsGroups" label="处理班组" width="180" align="center"></el-table-column>
+            <el-table-column prop="result" label="处理结果" width="150" align="center"></el-table-column>
+            <el-table-column prop="method" label="处理方法" width="180" align="center"></el-table-column>
+            <el-table-column prop="source" label="故障来源" align="center">
+                <template slot-scope="scope">
+                    {{ scope.row.source == 'null' ? '' : scope.row.source }}
+                </template>
+            </el-table-column>
+            <el-table-column prop="notes" label="车组预计送修时间" align="center">
+                <template slot-scope="scope">
+                    {{ scope.row.notes == 'null' ? '' : scope.row.notes }}
+                </template>
+            </el-table-column>
+            <el-table-column prop="notes" label="查看" align="center" width="130">
+                <template slot-scope="scope">
+                    <el-button @click="showModal(scope.row.id)" class="icon-button">
+                        <i class="el-icon-view"></i>
+                        查看附件
+                    </el-button>
+                </template>
+                <el-dialog title="附件列表" :visible.sync="dialogVisible" width="40%" :before-close="handleCloseFile"
+                    append-to-body>
+                    <el-table :data="attachmentList" style="width: 100%">
+                        <!-- <el-table-column prop="faultFileMidId" label="序号"></el-table-column> -->
+                        <el-table-column prop="fileName" align="center" label="名称">
+                            <template slot-scope="{ row }">
+                                <el-link @click="handleFileNameClick(row)">{{ row.fileName }}</el-link>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="fileType" align="center" label="类型"></el-table-column>
+                        <el-table-column label="操作" align="center">
+                            <template slot-scope="{ row }">
+                                <el-button type="primary" icon="el-icon-download"
+                                    @click="downloadAttachment(row)"></el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </el-dialog>
+            </el-table-column>
+        </el-table>
+
+        <Pagination v-bind:child-msg="pageparm" v-bind:total="total" @callFather="callFather"></Pagination>
+    </div>
+</template>
+  
+<script>
+import axios from 'axios'
+import Pagination from '../../../components/Pagination.vue'
+import { baseURL } from '../../../api/base'
+import { carNumberList } from '../.././../common/carNumber'
+
+
+
+export default {
+    name: 'Fault',
+    components: {
+        Pagination
+    },
+    data() {
+        return {
+            carNumbers: [],
+            carNumberList,
+            baseURL,
+            timeList: [],
+            tableData: [],
+            editFormVisible: false,
+            title: '编辑',
+            editForm: {
+                risk: 0,
+                state: 1
+            },
+            risk: 0,
+            result: '',
+            rules: {
+                deliveryDate: [{ required: true, message: '请输入日期', trigger: 'blur' }],
+                carNumber: [{ required: true, message: '请输入车号', trigger: 'blur' }],
+                carBodyNumber: [{ required: true, message: '请输入车厢号', trigger: 'blur' }],
+                faultDescription: [{ required: true, message: '请输入故障描述', trigger: 'blur' }],
+                teamsGroups: [{ required: true, message: '请选择班组', trigger: 'blur' }],
+                funClass: [{ required: true, message: '请选择功能分类', trigger: 'blur' }],
+                handle: [{ required: true, message: '请选择处置分类', trigger: 'blur' }],
+            },
+            pageparm: {
+                pageNo: 1,
+                pageSize: 10000,
+                state: 1
+            },
+            total: 0,
+            allList: [],
+            loading: true,
+            teamsList: [],
+
+            fileList: [],
+            dialogVisible: false,
+            attachmentList: [
+                // 附件数据应该在这里
+                // 格式示例：
+                // { name: '文件1', type: '文档', url: '附件下载接口地址' }
+            ],
+        }
+    },
+    created() {
+        this.search()
+        this.getTeams()
+    },
+    computed: {
+        indexMethod: function () {
+            return (this.pageparm.pageNo - 1) * (this.pageparm.pageSize) + 1
+        }
+    },
+    methods: {
+        // 重置
+        resetForm(formName) {
+            this.$refs[formName].resetFields();
+            this.timeList = []
+            delete this.pageparm.startTime
+            delete this.pageparm.endTime
+            if (this.pageparm.carNumbers) {
+                delete this.pageparm.carNumbers
+            }
+            this.carNumbers = []
+        },
+        getTeams() {
+            axios({
+                url: baseURL + '/teams/selectall'
+            }).then(res => {
+                this.teamsList = res.data.data
+                this.loading = false
+            }).catch(err => {
+                console.log(err);
+            })
+        },
+        search() {
+            if (this.carNumbers.length) {
+                this.pageparm.carNumbers = this.carNumbers
+            }
+
+            this.loading = true
+            if (this.timeList.length) {
+                this.pageparm.startTime = this.getYMDHMS(new Date(this.timeList[0].toString()));
+                this.pageparm.endTime = this.getYMDHMS(new Date(this.timeList[1].toString()))
+            }
+            this.pageparm.state = 1
+            this.pageparm.pageNo = 1
+            this.pageparm.pageSize = 50
+            axios({
+                method: 'post',
+                url: baseURL + '/fault/screenfault',
+                data: this.pageparm
+            }).then(res => {
+                this.$message.success('搜索成功')
+                this.tableData = res.data.data.list
+                this.tableData = this.tableData.map(item => {
+                    item.deliveryDate = this.getYMDHMS(item.deliveryDate)
+                    item.risk = item.risk == 'null' || '0' ? 0 : parseInt(item.risk)
+                    item.code = item.code == 'null' ? '' : item.code
+                    item.schedule = item.schedule == 'null' ? '' : item.schedule
+                    item.respDepart = item.respDepart == 'null' ? '' : item.respDepart
+                    item.notes = item.notes == 'null' ? '' : item.notes
+                    return item
+                })
+                this.total = res.data.data.size
+                this.loading = false
+            }).catch(err => {
+                this.initPage()
+                this.getFault()
+                this.$message.error('搜索失败')
+                console.log(err)
+            })
+
+        },
+        initPage() {
+            this.pageparm = {
+                pageNo: 1,
+                pageSize: 50,
+            }
+        },
+        getYMDHMS(val) {
+            let date = new Date(val)
+            let Y = date.getFullYear()
+            const M = (date.getMonth() + 1).toString().padStart(2, '0')
+            const D = (date.getDate()).toString().padStart(2, '0')
+            return Y + "-" + M + "-" + D;
+        },
+        exportExcel() {
+            if (this.carNumbers.length) {
+                this.pageparm.carNumbers = this.carNumbers
+            }
+            if (this.timeList.length) {
+                this.pageparm.startTime = this.getYMDHMS(new Date(this.timeList[0].toString()));
+                this.pageparm.endTime = this.getYMDHMS(new Date(this.timeList[1].toString()))
+            }
+
+            let openUrl = `${baseURL}/fault/exportsenior?`;
+            for (let obj in this.pageparm) {
+                if (this.pageparm[obj]) {
+                    openUrl += obj + '=' + this.pageparm[obj] + '&'
+                }
+            }
+            axios.get(openUrl).then(res => {
+                console.log(openUrl)
+                window.location.href = openUrl
+            })
+
+        },
+        callFather(val) {
+            this.pageparm.pageNo = val.pageNo
+            this.pageparm.pageSize = val.pageSize
+            this.getFault()
+        },
+        getFault() {
+            if (this.carNumbers.length) {
+                this.pageparm.carNumbers = this.carNumbers
+            }
+            this.pageparm.state = 1
+            axios({
+                url: baseURL + '/fault/screenfault',
+                method: 'post',
+                data: this.pageparm
+            }).then(res => {
+                this.tableData = res.data.data.list
+                this.tableData = this.tableData.map(item => {
+                    item.deliveryDate = this.getYMDHMS(item.deliveryDate)
+                    item.risk = item.risk == 'null' || '0' ? 0 : parseInt(item.risk)
+                    item.code = item.code == 'null' ? '' : item.code
+                    item.schedule = item.schedule == 'null' ? '' : item.schedule
+                    item.respDepart = item.respDepart == 'null' ? '' : item.respDepart
+                    item.notes = item.notes == 'null' ? '' : item.notes
+                    return item
+                })
+                this.total = res.data.data.size
+                this.loading = false
+            }).catch(err => {
+                console.log(err);
+            })
+        },
+        deleteById(row) {
+            this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                axios({
+                    url: baseURL + '/fault/deletefaultid',
+                    params: { id: row.id }
+                }).then(res => {
+                    this.$message({
+                        message: '删除成功',
+                        type: 'success'
+                    });
+                    this.getFault()
+                }).catch(err => {
+                    console.log(err)
+                })
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                });
+            });
+        },
+        handleEdit(index, row) {
+            this.editFormVisible = true
+            if (row != undefined && row != 'undefined') {
+                this.title = '修改'
+                this.editForm = row
+                if (this.editForm.result != '未处理' & this.editForm.result != '长期跟踪') {
+                    this.result = '已处理'
+                } else if (this.editForm.result == '未处理') {
+                    this.result = '未处理'
+                } else if (this.editForm.result == "长期跟踪") {
+                    this.result = '长期跟踪'
+                }
+            } else {
+                this.title = '添加'
+                this.editForm = { state: 1 }
+            }
+        },
+        changeResult() {
+            this.editForm.result = ''
+        },
+        handelFault() {
+            this.$refs['editForm'].validate((valid) => {
+                if (valid) {
+                    if (this.result != '已处理') {
+                        this.editForm.result = this.result
+                    }
+                    this.editForm.risk = this.risk
+                    if (this.title == '添加') {
+                        axios({
+                            url: baseURL + '/fault/insertfault',
+                            method: 'post',
+                            data: this.editForm
+                        }).then(res => {
+                            this.$message({
+                                message: this.title + '成功',
+                                type: 'success'
+                            });
+                            this.editFormVisible = false
+                            this.editForm = {}
+                            this.initPage()
+                            this.getFault()
+                        }).catch(err => {
+                            console.log(err)
+                            this.$message({
+                                message: this.title + '失败',
+                                type: 'error'
+                            });
+                            this.editFormVisible = false
+                            this.editForm = {}
+                            this.initPage()
+                            this.getFault()
+                        })
+                    } else {
+                        for (let obj in this.editForm) {
+                            if (!this.editForm[obj] & obj != 'risk') {
+                                this.editForm[obj] = 'null'
+                            }
+                        }
+                        axios({
+                            url: baseURL + '/fault/updatefaultid',
+                            method: 'post',
+                            data: this.editForm,
+                        }).then(res => {
+                            this.editFormVisible = false
+                            this.editForm = {}
+                        }).catch(err => {
+                            console.log(err)
+                        })
+                    }
+                } else {
+                    console.log('提交失败');
+                    return false;
+                }
+            });
+        },
+        closeDialog() {
+            this.editFormVisible = false
+            this.editForm = {}
+            this.initPage()
+            this.getFault()
+        },
+        handleUploadSuccess(res) {
+            this.uploadUrlPath = JSON.stringify(res);
+            this.loading.close();
+        },
+        handleBeforeUpload() {
+            this.loading = this.$loading({
+                lock: true,
+                text: "上传中",
+                background: "rgba(0, 0, 0, 0.7)",
+            });
+        },
+        handleUploadError() {
+            this.$message({
+                type: "error",
+                message: "上传失败",
+            });
+            this.loading.close();
+        },
+
+        handleRemove(file, fileList) {
+            console.log(file, fileList);
+
+        },
+        handlePreview(file) {
+            console.log(file);
+        },
+        handleExceed(files, fileList) {
+            this.$message.warning(`当前限制选择文件个数，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
+        },
+        beforeRemove(file, fileList) {
+            return this.$confirm(`确定移除 ${file.name}？`);
+        },
+        handleSuccess() {
+            this.getFault()
+            this.$message.success("导入成功")
+        },
+        handleError() {
+            this.getFault()
+            this.$message.error("导入格式错误，请修改后重新导入！")
+
+        },
+        resetRisk() {
+            this.risk = 0
+        },
+        changState(id, state) {
+            this.$confirm('此操作将数据提交到故障库, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                axios({
+                    url: ` ${baseURL}/fault/changestate`,
+                    params: { id, state: 0 }
+                }).then(res => {
+                    this.$message.success("已转移到故障库")
+                    this.search()
+                }).catch(err => {
+                    this.$message.error('重新提交')
+                })
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消提交'
+                });
+            });
+        },
+        showModal(id) {
+            // 调用接口
+            axios({
+                url: baseURL + '/fault/fileList/' + id,
+                method: 'get'
+            }).then(res => {
+                this.dialogVisible = true;
+                this.attachmentList = res.data.data || []
+            })
+        },
+        handleCloseFile(done) {
+            // 在这里可以处理模态框关闭前的逻辑
+            done(); // 调用 done() 表示关闭模态框
+        },
+        downloadAttachment(attachment) {
+            // 调用附件下载接口，你需要根据实际情况修改这里的代码
+            console.log('下载附件', attachment);
+            // 这里可以使用 window.open 或者其他方式调用下载接口
+            downloadFile(baseURL + '/fault/download/' + attachment.faultFileMidId, attachment.fileName)
+        },
+    },
+}
+
+</script>
+  
+  <!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped>
+.rate_wrap {
+    display: flex;
+    align-items: center;
+}
+
+.uploadFile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 添加拖拽时的样式 */
+.uploadFile.drag-over {
+    border-color: #409eff;
+    /* 拖拽时的边框颜色 */
+}
+
+.icon-button {
+    border: none;
+    /* 移除按钮边框 */
+    color: #409eff;
+    /* 设置按钮文字颜色为蓝色 */
+}
+
+/* 设置el-link的默认颜色 */
+.el-link {
+    color: #409eff !important;
+}
+</style>
+  
