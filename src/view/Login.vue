@@ -15,6 +15,7 @@
           <el-radio-group v-model="params.roleId">
             <el-radio label="1">班组</el-radio>
             <el-radio label="3">技术员</el-radio>
+            <el-radio label="5">长客</el-radio>
           </el-radio-group>
         </div>
       </div>
@@ -69,6 +70,10 @@ export default {
             this.$router.push({
               path: '/technician/fault'
             })
+          }  else if (this.params.roleId == 1 & this.params.userName == 'erji') {
+            this.$router.push({
+              path: '/teamGroup/specific'
+            })
           } else if (this.params.roleId == 1 & this.params.userName != 'gongjuzu') {
             this.$router.push({
               path: '/teams/faultcheck'
@@ -82,7 +87,11 @@ export default {
             this.$router.push({
               path: '/tool/metering'
             })
-            console.log('gjz')
+          }else if (this.params.roleId == 5) {
+            this.$router.push({
+              path: '/technician/fault'
+            })
+            console.log('changke')
 
           }
         } else {

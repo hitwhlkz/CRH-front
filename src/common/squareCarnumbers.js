@@ -1,4 +1,5 @@
 let squareCarNumberList = [
+
     { label: 2217, value: 2217 }, { label: 2249, value: 2249 }, { label: 2250, value: 2250 }, { label: 2251, value: 2251 },
     { label: 2256, value: 2256 },
     { label: 2294, value: 2294 }, { label: 2295, value: 2295 }, { label: 2308, value: 2308 }, { label: 2309, value: 2309 },
@@ -19,6 +20,9 @@ let squareCarNumberList = [
     { label: 2908, value: 2908 }, { label: 2921, value: 2921 }, { label: 2922, value: 2922 }, { label: 2923, value: 2923 },
     { label: 2924, value: 2924 }, { label: 2925, value: 2925 }, { label: 2931, value: 2931 }, { label: 2932, value: 2932 },
     { label: 2933, value: 2933 }, { label: 2934, value: 2934 }, { label: 2935, value: 2935 },
+
+    { label: 2377, value: 2377 },  { label: 2378, value: 2378 }, { label: 2379, value: 2379 }, { label: 2380, value: 2380 }, 
+    { label: 2381, value: 2381 }, 
 ]
 
 let eightCarNumberList = [
@@ -43,4 +47,8 @@ let twoCarNumberList = [
 
 
 
-export { squareCarNumberList, eightCarNumberList, twoCarNumberList }
+let fourCarNumberList = [
+    2377,2378,2379,2380,2381,
+]
+
+export { squareCarNumberList, eightCarNumberList, twoCarNumberList,fourCarNumberList}

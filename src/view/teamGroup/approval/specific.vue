@@ -21,7 +21,7 @@
     </el-form>
 
     <!-- 普查列表 -->
-    <el-table :data="surveyList" style="width: 100%">
+    <el-table :data="surveyList.filter(item => item.erjiStatus === 0)" style="width: 100%">
       <el-table-column prop="name" label="普查名称">
         <template slot-scope="scope">
           <el-button type="text" @click="openWordDocument(scope.row)">{{ scope.row.name }}</el-button>
@@ -29,21 +29,22 @@
       </el-table-column>
       <el-table-column label="作业要点">
         <template slot-scope="scope">
-          <el-link v-if="scope.row.excelData" type="primary" @click="openExcel(scope.row.excelData)">作业要点</el-link>
-          <el-upload
-            v-else
-            class="upload-demo"
-            action="#"
-            :on-change="(file) => handleExcelUploadForExisting(file, scope.row)"
-            :auto-upload="false"
+          <el-link 
+            type="primary" 
+            @click="handleexcelData(scope.row)"
           >
-            <el-button size="small" type="primary">上传作业要点</el-button>
-          </el-upload>
+          {{ scope.row.excelData ? '作业要点' : '暂无作业要点' }}
+          </el-link>
         </template>
       </el-table-column>
       <el-table-column label="培训记录表">
         <template slot-scope="scope">
-          <el-link type="primary" @click="openExcel(scope.row.trainingRecordData)">培训记录表</el-link>
+          <el-link 
+            type="primary" 
+            @click="handleeducationRecord(scope.row)"
+          >
+          {{ scope.row.trainingData ? '培训记录' : '暂无培训记录' }}
+          </el-link>
         </template>
       </el-table-column>
       <el-table-column label="普查记录表">
@@ -52,7 +53,7 @@
             type="primary" 
             @click="handleSurveyRecord(scope.row)"
           >
-            {{ scope.row.surveyRecordFileName || '上传普查记录表' }}
+            {{ scope.row.surveyRecordFilename || '新建普查记录表' }}
           </el-link>
         </template>
       </el-table-column>
@@ -81,13 +82,8 @@
       </el-table-column>
       <el-table-column label="操作">
         <template slot-scope="scope">
-          <el-button size="small" @click="viewSurveyDetails(scope.row)">查看详情</el-button>
-          <el-button size="small" type="primary" @click="editSurvey(scope.row)">编辑</el-button>
-          <el-button size="small" type="danger" @click="deleteSurvey(scope.row)">删除</el-button>
-          <el-button v-if="isJishuyuan && scope.row.status === '未下发'" size="small" type="success" @click="issueSurvey(scope.row)">下发</el-button>
-          <el-button v-if="(isChangke || isErji) && (scope.row.changke === 0 || scope.row.erji === 0)" size="small" type="warning" @click="sendToZhijian(scope.row)">送至质检</el-button>
-          <el-button v-if="isZhijian && scope.row.zhijian === 0" size="small" type="info" @click="sendToJishuyuan(scope.row)">送审</el-button>
-        </template>
+          <el-button size="small" type="danger" @click="sendToZhijian(scope.row)">下发质检</el-button>
+         </template>
       </el-table-column>
     </el-table>
 
@@ -153,41 +149,14 @@
     <!-- Excel预览对话框 -->
     <el-dialog
       :visible.sync="surveyRecordDialogVisible"
-      width="95%"
+      width="75%"
       :fullscreen="false"
       custom-class="survey-record-dialog"
+      :modal="true"
+      display: flex
+      :z-index=1
     >
-      <div v-if="currentSurvey.surveyRecordData && currentSurvey.surveyRecordData.length > 0" class="excel-preview-container">
-        <div class="excel-table-wrapper">
-          <table class="excel-table">
-            <tbody>
-              <tr v-for="(row, rowIndex) in currentSurvey.surveyRecordData" :key="rowIndex">
-                <td v-for="(cell, cellIndex) in row" :key="cellIndex">
-                  {{ cell || '' }} <!-- 直接显示单元格的值 -->
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div v-else>
-        <p>请上传普查记录表</p>
-        <el-upload
-          class="upload-demo"
-          action="#"
-          :on-change="handleSurveyRecordUpload"
-          :auto-upload="false"
-        >
-          <el-button size="small" type="primary">点击上传</el-button>
-          <template #tip>
-            <div class="el-upload__tip">只能上传 xlsx 文件，且不超过 10MB</div>
-          </template>
-        </el-upload>
-      </div>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="surveyRecordDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="saveSurveyRecord">保存并导出</el-button>
-      </span>
+    <HandsontableComponent :width="'100%'" :height="'100%'" :data="currentSurvey" />
     </el-dialog>
 
     <!-- Word文档预览对话框 -->
@@ -236,36 +205,39 @@
 
     <!-- 上传对话框 -->
     <el-dialog
-      title="上传普查记录表"
-      :visible.sync="uploadDialogVisible"
-      width="50%"
+    title="上传普查记录表"
+    :visible.sync="uploadDialogVisible"
+    width="50%"
+  >
+    <el-upload
+      class="upload-demo"
+      action="#"
+      :on-change="handleFileChange"
+      :auto-upload="false"
     >
-      <el-upload
-        class="upload-demo"
-        action="#"
-        :on-change="handleFileChange"
-        :auto-upload="false"
-      >
-        <el-button size="small" type="primary">选择文件</el-button>
-        <template #tip>
-          <div class="el-upload__tip">只能上传 xlsx 文件，且不超过 10MB</div>
-        </template>
-      </el-upload>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="uploadDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="uploadSurveyRecord">确 定</el-button>
-      </span>
-    </el-dialog>
-  </div>
+      <el-button size="small" type="primary">选择文件</el-button>
+      <template #tip>
+        <div class="el-upload__tip">只能上传 xlsx 文件，且不超过 10MB</div>
+      </template>
+    </el-upload>
+    <span slot="footer" class="dialog-footer">
+      <el-button @click="uploadDialogVisible = false">取 消</el-button>
+      <el-button type="primary" @click="uploadSurveyRecord">确 定</el-button>
+    </span>
+  </el-dialog>
+</div>
 </template>
 
 <script>
 import axios from '../../../api/axios';  // 使用我们配置好的 axios 实例
 import * as XLSX from 'xlsx';
+import HandsontableComponent from '../../../components/HandsontableComponent.vue';
+
 
 export default {
   name: 'SpecialSurveyManagement',
   components: {
+    HandsontableComponent,
   },
   data() {
     return {
@@ -304,6 +276,9 @@ export default {
       editingSurvey: {},
       uploadDialogVisible: false,
       uploadedFile: null,
+      surveyRecordDialogVisible: false,
+    currentSurvey: {},
+    uploadDialogVisible: false,
     }
   },
   created() {
@@ -312,7 +287,7 @@ export default {
       surveyRecordData: [],
       surveyRecordFileName: ''
     };
-    console.log('Component created, dialogVisible:', this.dialogVisible)
+    console.log('Component created, surveyRecordData:', this.currentSurvey.surveyRecordData)
   },
   mounted() {
     console.log('Component mounted, dialogVisible:', this.dialogVisible)
@@ -446,6 +421,50 @@ export default {
 
       await this.fetchSurveys(); // 删除成功后重新获取列表
     },
+    handleexcelData(survey) {
+        this.currentSurvey.excelData = 0;
+        console.log('处理普查记录:', survey);
+        this.currentSurvey = { ...survey };  // 创建一个副本
+        // // 根据后端数据设置状态
+        // this.currentSurvey.changkeStatus = survey.changkeStatus === -1 ? '未下发' : '已下发';
+        // this.currentSurvey.erjiStatus = survey.erjiStatus === -1 ? '未下发' : '已下发';
+        // this.currentSurvey.zhijianStatus = survey.zhijianStatus === -1 ? '未下发' : '已下发';
+        // this.currentSurvey.status = survey.status || '未开始'; // 初始状态
+  
+        // 直接使用 surveyRecordData 进行解析
+        if (this.currentSurvey.excelData) {
+           // 有数据的情况下解析并下载 Excel 文件
+    const base64Data = this.currentSurvey.excelData; // 获取 Base64 编码数据
+    const binaryStr = atob(base64Data); // 解码 Base64 字符串
+    const len = binaryStr.length;
+    const bytes = new Uint8Array(len);
+
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryStr.charCodeAt(i);
+    }
+
+    // 创建 Blob 对象
+    const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    
+    // 创建下载链接
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = this.currentSurvey.surveyRecordFilename || 'survey_record.xlsx'; // 设置文件名
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    // 释放 URL 对象
+    URL.revokeObjectURL(url);
+
+
+        } else {
+            // 如果没有数据，弹出上传对话框
+            this.$message.warning('当前普查记录表不存在，请上传新的记录表。');
+            this.openexcelDialog(); // 打开上传对话框
+        }
+      },
     async updateSurvey(survey) {
       console.log('开始更新普查:', JSON.stringify(survey, null, 2)); // 输出当前普查数据
       const formData = new FormData(); // 创建表单数据对象
@@ -501,20 +520,17 @@ export default {
       }
     },
     async issueSurvey(survey) {
-      console.log('下发普查:', survey);
-      survey.changkeStatus = 0; // 设置长客状态为0
-      survey.erjiStatus = 0; // 设置二级状态为0
-      survey.zhijianStatus = 0; // 设置质检状态为0
-      survey.status = '进行中'; // 更新普查状态为进行中
-      await this.updateSurvey(survey); // 更新普查
-    },
+        console.log('下发普查:', survey);
+        survey.changkeStatus = 0; // 设置长客状态为0
+        survey.status = '进行中'; // 更新普查状态为进行中
+        await this.updateSurvey(survey); // 更新普查
+      },
     async sendToZhijian(survey) {
-      console.log('送至质检:', survey);
-      if (this.isChangke) survey.changke = 1;
-      if (this.isErji) survey.erji = 1;
-      survey.zhijian = 0;
-      await this.updateSurvey(survey);
-    },
+        console.log('送至质检:', survey);
+        survey.erjiStatus = 1;
+        survey.zhijianStatus = 0;
+        await this.updateSurvey(survey);
+      },
     async sendToJishuyuan(survey) {
       console.log('送审:', survey);
       survey.zhijian = 1;
@@ -566,7 +582,7 @@ export default {
           URL.revokeObjectURL(url);
         } catch (error) {
           console.error('打开Excel文件失败:', error);
-          this.$message.error('打开文件失败，请重试');
+          this.$message.error('打开文件失败请重试');
         }
       } else {
         this.$message.warning('文件不存在');
@@ -581,7 +597,7 @@ export default {
       return statusMap[status] || ''
     },
     viewSurveyDetails(survey) {
-      console.log('查看普查详情', survey)
+      console.log('查普查详情', survey)
     },
     editSurvey(survey) {
       console.log('编辑普查', survey);
@@ -630,97 +646,21 @@ export default {
     handleExcelUpload(file) {
       this.newSurvey.excel = file.raw;
     },
-    // submitNewSurvey() {
-    //   if (!this.newSurvey.name || !this.newSurvey.document) {
-    //     this.$message.error('普查名称和普查文档是必填');
-    //     return;
-    //   }
-
-    //   // 创建新记录对象
-    //   const newRecord = {
-    //     id: this.surveyList.length + 1,
-    //     name: this.newSurvey.name,
-    //     documentUrl: URL.createObjectURL(this.newSurvey.document),
-    //     excelUrl: this.newSurvey.excel ? URL.createObjectURL(this.newSurvey.excel) : null,
-    //     trainingRecordUrl: null, // 假设培训记录表创建时为空
-    //     surveyRecordUrl: null,
-    //     surveyRecordFileName: null,
-    //     createdAt: this.newSurvey.createdAt,
-    //     manager: '管理员', // 这里可根据实际情况设置
-    //     status: '未开'
-    //   };
-
-    //   // 添加新录到列表
-    //   this.surveyList.unshift(newRecord);
-
-    //   // 更新总数
-    //   this.total += 1;
-
-    //   console.log('新建普查', newRecord);
-    //   this.$message.success('新建普查成功');
-
-    //   this.closeDialog();
-
-    //   // 在实际应用中，你应该在这里调 API 并理响应
-    //   // 成功后刷新普查列表
-    //   // this.fetchSurveys();
-    // },
+    
     handleExcelUploadForExisting(file, survey) {
       // 这应该调用API来上件并更新记录
       console.log('为现有记录上传作要点', file, survey);
       
       // 模拟上传成功
       this.$set(survey, 'excelUrl', URL.createObjectURL(file.raw));
-      
-      // 在实际应用中，你应该这里调用API来上传件
-      // 传成功后，更新 survey.excelUrl 为务器返回的URL
-      // 如：
-      // this.uploadExcelToServer(file.raw, survey.id).then(response => {
-      //   this.$set(survey, 'excelUrl', response.data.url);
-      // }).catch(error => {
-      //   console.error('上失败', error);
-      //   this.$message.error('上失，请重');
-      // });
-    },
-
-    // 模拟上传到务器的方法（实际应用中需要实现）
-    uploadExcelToServer(file, surveyId) {
-      // 这里应该是真实的API调用
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve({
-            data: {
-              url: URL.createObjectURL(file)
-            }
-          });
-        }, 1000);
-      });
-    },
-
-    previewExcel(url) {
-      if (url) {
-        this.excelPreviewUrl = url;
-        this.excelPreviewVisible = true;
-      } else {
-        this.$message.warning('普查记录表不存在');
-      }
+   
     },
 
     handleSurveyRecord(survey) {
-      console.log('处理普查记录:', survey);
       this.currentSurvey = { ...survey };  // 创建一个副本
-
-      // 根据后端数据设置状态
-      this.currentSurvey.changkeStatus = survey.changkeStatus === -1 ? '未下发' : '已下发';
-      this.currentSurvey.erjiStatus = survey.erjiStatus === -1 ? '未下发' : '已下发';
-      this.currentSurvey.zhijianStatus = survey.zhijianStatus === -1 ? '未下发' : '已下发';
-      this.currentSurvey.status = survey.status || '未开始'; // 初始状态
-
       // 直接使用 surveyRecordData 进行解析
       if (this.currentSurvey.surveyRecordData) {
-          console.log('使用现有的普查记录数据进行解析:', this.currentSurvey.surveyRecordData);
-          this.parseExcelData(this.currentSurvey.surveyRecordData); // 解析数据
-          this.surveyRecordDialogVisible = true; // 打开预览对话框
+        this.surveyRecordDialogVisible = true; 
       } else {
           // 如果没有数据，弹出上传对话框
           this.$message.warning('当前普查记录表不存在，请上传新的记录表。');
@@ -732,14 +672,18 @@ export default {
         // 打开上传对话框的逻辑
         this.uploadDialogVisible = true; // 假设您有一个控制上传对话框可见性的变量
     },
-
+    
     async uploadSurveyRecord() {
         // 处理上传文件的逻辑
         const formData = new FormData();
+        console.log(this.uploadedFile)
         if (this.uploadedFile) {
             formData.append('surveyRecordData', this.uploadedFile); // 添加上的文件
         }
-
+        console.log('准备新建的数据:');
+        for (let [key, value] of formData.entries()) {
+          console.log(key, value);
+        }
         try {
             const response = await axios.put(`/api/special-surveys/${this.currentSurvey.id}`, formData, {
                 headers: {
@@ -762,42 +706,41 @@ export default {
     handleFileChange(file) {
         this.uploadedFile = file.raw; // 处理文件选择
     },
-
-    parseExcelData(data) {
-      console.log('解析Excel数据:', data);
-      try {
-        let workbook;
-        if (typeof data === 'string') {
-          // 尝试解码Base64
-          try {
-            const decodedData = atob(data);
-            workbook = XLSX.read(decodedData, { type: 'binary' });
-          } catch (decodeError) {
-            console.error('Base64解码失败，尝试直接解析数据:', decodeError);
-            workbook = XLSX.read(data, { type: 'string' });
-          }
-        } else if (data instanceof ArrayBuffer) {
-          workbook = XLSX.read(new Uint8Array(data), { type: 'array' });
-        } else {
-          throw new Error('不支持的数据类型');
-        }
-
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-        // 直接将解析后的数据存储在 surveyRecordData 中
-        this.currentSurvey.surveyRecordData = jsonData.map(row => 
-            row.map(cell => (cell !== undefined ? cell : '')) // 直接使用单元格的值
-        );
-
-        console.log('解析后的表格数据:', this.currentSurvey.surveyRecordData);
-      } catch (error) {
-        console.error('解析Excel数据失败:', error);
-        this.$message.error('解析Excel数据失败，请检查文件格式');
-        this.currentSurvey.surveyRecordData = [];  // 设置为空数组以避免渲染错误
+    parseExcelData(base64Str) {
+    console.log('解析Base64编码的Excel数据:', base64Str);
+    try {
+      const binaryStr = atob(base64Str);
+      const len = binaryStr.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryStr.charCodeAt(i);
       }
-    },
+      const workbook = XLSX.read(bytes.buffer, { type: 'array' });
+      console.log(workbook);
+
+
+      const firstSheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[firstSheetName];
+      // 将数据转换为二维数组（Handsontable 的格式）
+      this.surveyRecordData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+       // 解析合并单元格信息
+      const mergeCells = sheet['!merges'] || [];
+      this.merges = mergeCells.map((merge) => ({
+        row: merge.s.r,
+        col: merge.s.c,
+        rowspan: merge.e.r - merge.s.r + 1,
+        colspan: merge.e.c - merge.s.c + 1,
+      }));
+
+      console.log('第二种方法表格',this.surveyRecordData)
+      console.log('第二种方法',this.merges)
+
+    } catch (error) {
+      console.error('解析Excel数据失败:', error);
+      this.surveyRecordData = []; // 设置为空数组以避免渲染错误
+    }
+},
+
 
     saveSurveyRecord() {
       // 将当前编辑的数据转换为 XLSX 可以处理的格式
@@ -842,142 +785,7 @@ export default {
       reader.readAsArrayBuffer(file.raw);
     },
 
-    someMethodBeforeParseExcelFile() {
-      // 方法内容
-    },
-
-    parseExcelFile(file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        console.log('Excel 工作簿信息:', workbook);
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        console.log('第一个工作表信息:', worksheet);
-
-        const range = XLSX.utils.decode_range(worksheet['!ref']);
-        console.log('Excel 数据范围:', range);
-
-        const tableData = [];
-        
-        // 处理列宽
-        this.columnWidths = [];
-        if (worksheet['!cols']) {
-          worksheet['!cols'].forEach((col, index) => {
-            let width = (col.wpx || 60);
-            if (index === 1) { // 假设检查项目是第二列
-              width = Math.max(width, 300); // 确检查项目列少有 300px 宽
-            }
-            this.columnWidths.push(width + 'px');
-          });
-        }
-
-        // 处理格样式
-        this.tableStyle = {
-          borderCollapse: 'collapse',
-          width: '100%',
-          tableLayout: 'fixed',
-        };
-
-        // 处理表格容器样式
-        this.tableWrapperStyle = {
-          overflowX: 'auto',
-          maxWidth: '100%',
-        };
-
-        for (let R = range.s.r; R <= range.e.r; ++R) {
-          const row = [];
-          for (let C = range.s.c; C <= range.e.c; ++C) {
-            const cellAddress = XLSX.utils.encode_cell({r: R, c: C});
-            const cell = worksheet[cellAddress] || { v: '', t: 's' };
-            
-            // 确保 cell.style 存在
-            cell.style = this.parseExcelStyle(cell.s) || {};
-
-            cell.v = cell.v != null ? cell.v.toString() : '';
-            cell.r = R;
-            cell.c = C;
-
-            if (!cell.hidden) {
-              row.push(cell);
-            }
-          }
-          tableData.push(row);
-        }
-
-        console.log('解析后的表格数据:', tableData);
-        this.$set(this.currentSurvey, 'surveyRecordData', tableData);
-      };
-      reader.readAsArrayBuffer(file);
-    },
-
-    parseExcelStyle(style) {
-      const result = {};
-      if (style) {
-        if (style.font) {
-          result.fontWeight = style.font.bold ? 'bold' : 'normal';
-          result.fontStyle = style.font.italic ? 'italic' : 'normal';
-          result.textDecoration = style.font.underline ? 'underline' : 'none';
-          result.fontSize = (style.font.sz || 11) + 'pt';
-          result.fontFamily = style.font.name || 'Arial';
-          result.color = style.font.color && style.font.color.rgb ? '#' + style.font.color.rgb : '#000000';
-        }
-        if (style.fill && style.fill.fgColor) {
-          result.backgroundColor = '#' + style.fill.fgColor.rgb;
-        }
-        if (style.alignment) {
-          result.textAlign = style.alignment.horizontal || 'left';
-          result.verticalAlign = style.alignment.vertical || 'middle';
-        }
-        if (style.border) {
-          const borderStyle = (side) => side ? `${side.style || 'thin'} #${side.color.rgb || '000000'}` : 'none';
-          result.borderTop = borderStyle(style.border.top);
-          result.borderRight = borderStyle(style.border.right);
-          result.borderBottom = borderStyle(style.border.bottom);
-          result.borderLeft = borderStyle(style.border.left);
-        }
-      }
-      return result;
-    },
-
-    getCellStyle(cell, rowIndex, cellIndex) {
-      const style = {
-        border: '1px solid #000',
-        padding: '4px',
-        textAlign: cellIndex === 0 ? 'center' : 'left',
-        verticalAlign: 'middle',
-        fontSize: '12px',
-      };
-
-      if (rowIndex < 2) {
-        style.fontWeight = 'bold';
-        style.textAlign = 'center';
-        style.backgroundColor = '#f0f0f0';
-      }
-
-      if (cellIndex === 1) {
-        style.minWidth = '300px';
-      }
-
-      return { ...style, ...(cell && cell.style || {}) };
-    },
-
-    formatCellContent(cell) {
-      if (!cell || cell.v === undefined) return '';
-      if (cell.v === '✓') {
-        return '<span style="font-size: 16px; color: #000; font-weight: bold;">✓</span>';
-      }
-      return String(cell.v).replace(/\n/g, '<br>');
-    },
-
-    findMergedCell(merges, row, col) {
-      if (!merges) return null;
-      return merges.find(m => 
-        row >= m.s.r && row <= m.e.r &&
-        col >= m.s.c && col <= m.e.c
-      );
-    },
+    
 
     async openWordDocument(survey) {
       console.log('Downloading Word document:', survey);
@@ -1035,17 +843,8 @@ export default {
       }
     },
 
-    isEditableColumn(cellIndex) {
-      if (!this.currentSurvey.surveyRecordData || !this.currentSurvey.surveyRecordData[0]) {
-        return false;
-      }
-      const headerRow = this.currentSurvey.surveyRecordData[0];
-      const columnName = headerRow[cellIndex] ? headerRow[cellIndex].v : '';
-      return this.editableColumns.includes(columnName);
-    },
-
     getStatusText(status) {
-      console.log("当前行数据：", status);
+      // console.log("当前行数据：", status);
       status = Number(status);
       switch(status) {
         case -1: return '未开始';

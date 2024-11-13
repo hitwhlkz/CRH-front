@@ -402,6 +402,7 @@ export default {
               method: 'post',
               data: { ...this.editForm, type: 2 }
             }).then(res => {
+              console.log(res.data)
               this.$message({
                 message: this.title + '成功',
                 type: 'success'

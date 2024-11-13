@@ -1,30 +1,6 @@
 <template>
   <div>
-    <!-- 导出导入 -->
     <el-row :gutter="20">
-      <!-- <el-col :span="6">
-        <div class="grid-content bg-purple">
-          <el-upload class="upload-demo" :action="`${baseURL}/source/importsource`" multiple
-            :on-exceed="handleSourceExceed" :on-success="handleSourceSuccess" :on-error="handleError">
-            <el-button plain size="small" type="warning" icon="el-icon-star-off">导入源头</el-button>
-          </el-upload>
-        </div>
-      </el-col>
-      <el-col :span="6">
-        <div class="grid-content bg-purple">
-          <el-button plain size="small" type="warning" icon="el-icon-star-off"
-            @click="exportSourceExcel()">导出源头</el-button>
-        </div>
-      </el-col>
-      <el-col :span="6">
-        <div class="grid-content bg-purple">
-          <el-upload class="upload-demo" :action="`${baseURL}/source/importsourcecarnumber`" multiple
-            :on-exceed="handleSourceExceed" :on-success="handleSourceSuccess" :on-error="handleError">
-            <el-button plain size="small" type="warning" icon="el-icon-star-off">导入车型</el-button>
-          </el-upload>
-        </div>
-      </el-col> -->
-
       <el-col :span="6">
         <div class="grid-content bg-purple">
           <el-button size="small" type="warning" icon="el-icon-star-on" @click="exportSourceFinalExcel()">导出</el-button>
@@ -97,9 +73,11 @@
       <el-table-column prop="total" label="总数" align="center" width="70"></el-table-column>
       <el-table-column prop="complEight" label="CRH380A" width="90" align="center"></el-table-column>
       <el-table-column prop="complTwo" label="CRH2A" width="90" align="center"></el-table-column>
+      <el-table-column prop="complFour" label="复兴号" width="90" align="center"></el-table-column>
       <el-table-column prop="complTotal" label="已完成" width="70" align="center"></el-table-column>
       <el-table-column prop="incomplEight" label="CRH380A" width="90" align="center"></el-table-column>
       <el-table-column prop="incomplTwo" label="CRH2A" width="90" align="center"></el-table-column>
+      <el-table-column prop="incomplFour" label="复兴号" width="90" align="center"></el-table-column>
       <el-table-column prop="incomplTotal" label="未完成" width="70" align="center"></el-table-column>
 
       <el-table-column prop="carNumbers" label="车号" align="center" width="280">
@@ -218,6 +196,10 @@
           <el-input-number :min="0" :max="1000" v-model="editForm.complTwo" label=""
             placeholder="请输入CRH2A"></el-input-number>
         </el-form-item>
+        <el-form-item label="复兴号" prop="complFour">
+          <el-input-number :min="0" :max="1000" v-model="editForm.complFour" label=""
+            placeholder="请输入复兴号"></el-input-number>
+        </el-form-item>
         <el-form-item label="已完成" prop="complTotal">
           <el-input-number :min="0" :max="1000" v-model="editForm.complTotal" auto-complete="off"
             placeholder="请输入已完成"></el-input-number>
@@ -229,6 +211,10 @@
         <el-form-item label="CRH2A " prop="incomplTwo">
           <el-input-number :min="0" :max="1000" v-model="editForm.incomplTwo" label=""
             placeholder="请输入CRH2A"></el-input-number>
+        </el-form-item>
+        <el-form-item label="复兴号 " prop="incomplFour">
+          <el-input-number :min="0" :max="1000" v-model="editForm.incomplFour" label=""
+            placeholder="请输入复兴号"></el-input-number>
         </el-form-item>
         <el-form-item label="未完成" prop="incomplTotal">
           <el-input-number v-model="editForm.incomplTotal" auto-complete="off" placeholder="请输入未完成"></el-input-number>
@@ -318,7 +304,7 @@ import axios from 'axios'
 import { baseURL } from '../../../api/base'
 import { carNumberList } from '../.././../common/carNumber'
 import { classCarNumbers } from '../.././../common/classCarNumbers'
-import { squareCarNumberList, twoCarNumberList, eightCarNumberList } from '../../../common/squareCarnumbers'
+import { squareCarNumberList, twoCarNumberList, eightCarNumberList, fourCarNumberList } from '../../../common/squareCarnumbers'
 import { downloadFile } from '../../../api/FileDownload'
 
 
@@ -332,6 +318,7 @@ export default {
       squareCarNumberList,
       twoCarNumberList,
       eightCarNumberList,
+      fourCarNumberList,
       selectSquareCarNumberList: [],
       sid: 0,
       carNumbers: [],
@@ -375,8 +362,10 @@ export default {
       updateCompl: 0,
       updateIncomplTwo: 0,
       updateIncomplEight: 0,
+      updateIncomplFour: 0,
       updateComplTwo: 0,
       updateComplEight: 0,
+      updateComplFour: 0,
 
       span: [],
       index: null,
@@ -428,6 +417,7 @@ export default {
           return item
         })
         this.tableData = tableData
+        console.log(tableData);
         this.loading = false
         this.$message.success('搜索成功')
       }).catch(err => {
@@ -462,7 +452,6 @@ export default {
           return item
         })
         this.tableData = tableData
-
         this.loading = false
       }).catch(err => {
         console.log(err);
@@ -490,11 +479,13 @@ export default {
       this.$refs['editForm'].validate((valid) => {
         if (valid) {
           if (this.title == '添加') {
+            console.log(this.editForm)
             axios({
               url: baseURL + '/source/insertsource',
               method: 'post',
               data: this.editForm
             }).then(res => {
+              console.log(res)
               this.$message({
                 message: this.title + '成功',
                 type: 'success'
@@ -565,6 +556,7 @@ export default {
         type: 'warning'
       }).then(() => {
         if (this.selectSquareCarNumberList.length) {
+          console.log('提交车号',this.selectLongCarNumberList)
           for (let i = 0; i < this.selectSquareCarNumberList.length; i++) {
             axios({
               url: baseURL + '/source/insertsourcecarnumber',
@@ -618,26 +610,39 @@ export default {
 
         let incomplTwo = 0
         let incomplEight = 0
+        let incomplFour = 0
         let complTwo = 0
         let complEight = 0
+        let complFour = 0
 
         for (let i = 0; i < total; i++) {
+          console.log('当前carNumber',sourceCarNumberDto[i].carNumber)
           let complTime = this.toRemoveSpacing(sourceCarNumberDto[i].complTime)
           if (complTime.toLowerCase() == 'null' || complTime == '' || complTime == 'N/A' || complTime == '未完成') {
             incompl += 1
             // 在2A
             if (twoCarNumberList.includes(sourceCarNumberDto[i].carNumber)) {
+              console.log('属于2A',sourceCarNumberDto[i].carNumber)
               incomplTwo += 1
-            } else {
+            }else if(eightCarNumberList.includes(sourceCarNumberDto[i].carNumber)){
+              console.log('属于380A',sourceCarNumberDto[i].carNumber)
               incomplEight += 1
+            }else if (fourCarNumberList.includes(sourceCarNumberDto[i].carNumber)) {
+              console.log('属于复兴号',sourceCarNumberDto[i].carNumber)
+              incomplFour += 1
             }
             // 不在2A
           } else {
             compl += 1
             if (twoCarNumberList.includes(sourceCarNumberDto[i].carNumber)) {
+              console.log('属于2A',sourceCarNumberDto[i].carNumber)
               complTwo += 1
-            } else {
+            } else if(eightCarNumberList.includes(sourceCarNumberDto[i].carNumber)){
+              console.log('属于380A',sourceCarNumberDto[i].carNumber)
               complEight += 1
+            }else if (fourCarNumberList.includes(sourceCarNumberDto[i].carNumber)){
+              console.log('属于复兴号',sourceCarNumberDto[i].carNumber)
+              complFour +=1
             }
           }
         }
@@ -645,9 +650,10 @@ export default {
         this.updateCompl = compl
         this.updateComplEight = complEight
         this.updateComplTwo = complTwo
+        this.updateComplFour = complFour
         this.updateIncomplTwo = incomplTwo
         this.updateIncomplEight = incomplEight
-
+        this.updateIncomplFour = incomplFour
       }).then(() => {
         let state
         if (this.updateIncompl == 0 & this.updateTotal != 0) {
@@ -666,11 +672,14 @@ export default {
             complTotal: this.updateCompl,
             complEight: this.updateComplEight,
             complTwo: this.updateComplTwo,
+            complFour: this.updateComplFour,
             incomplEight: this.updateIncomplEight,
             incomplTwo: this.updateIncomplTwo,
+            incomplFour: this.updateIncomplFour,
             state
           },
         }).then(res => {
+          console.log('返回数据',res.data)
           this.editFormVisible = false
           // this.initPage()
           this.search()
@@ -779,7 +788,7 @@ export default {
           let state
           let editForm
           let complTime = this.toRemoveSpacing(row.complTime)
-          let incomplTwo, incomplEight, complTwo, complEight
+          let incomplTwo, incomplEight, complTwo, complEight, incomplFour, complFour
           if (complTime.toLowerCase() == 'null' || complTime == '' || complTime == 'N/A' || complTime == '未完成') {
             incomplTotal = this.editForm.incomplTotal - 1
             if (total != 0 & incomplTotal == 0) {
@@ -790,8 +799,10 @@ export default {
 
             if (twoCarNumberList.includes(row.carNumber)) {
               incomplTwo = this.editForm.incomplTwo - 1
-            } else {
+            } else if (eightCarNumberList.includes(row.carNumber)){
               incomplEight = this.editForm.incomplEight - 1
+            }else{
+              incomplFour = this.editForm.incomplFour - 1
             }
 
           } else {
@@ -806,8 +817,10 @@ export default {
 
             if (twoCarNumberList.includes(row.carNumber)) {
               complTwo = this.editForm.complTwo - 1
-            } else {
+            } else if (eightCarNumberList.includes(row.carNumber)){
               complEight = this.editForm.complEight - 1
+            }else{
+              complFour = this.editForm.complFour - 1
             }
           }
 
@@ -815,15 +828,19 @@ export default {
           if (complTime.toLowerCase() == 'null' || complTime == '' || complTime == 'N/A' || complTime == '未完成') {
             if (twoCarNumberList.includes(row.carNumber)) {
               editForm = { ...this.editForm, total, incomplTotal, incomplTwo, state }
-            } else {
+            } else if (eightCarNumberList.includes(row.carNumber)) {
               editForm = { ...this.editForm, total, incomplTotal, incomplEight, state }
+            }else{
+              editForm = { ...this.editForm, total, incomplTotal, incomplFour, state }
             }
 
           } else {
             if (twoCarNumberList.includes(row.carNumber)) {
               editForm = { ...this.editForm, total, complTotal, complTwo, state }
-            } else {
+            } else if (eightCarNumberList.includes(row.carNumber)){
               editForm = { ...this.editForm, total, complTotal, complEight, state }
+            }else{
+              editForm = { ...this.editForm, total, complTotal, complFour, state }
             }
 
           }

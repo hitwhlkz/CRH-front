@@ -23,6 +23,8 @@
   </el-menu>
 </template>
 <script>
+import { name } from 'file-loader';
+
 export default {
   name: 'leftnav',
   data() {
@@ -39,7 +41,7 @@ export default {
     getRes() {
       let roleId = localStorage.getItem('roleId')
       let username = localStorage.getItem('userName')
-      if (roleId == 1 & username != 'TEDS' & username != 'zhuanxiang' & username != 'shangbuzu' & username != 'gongjuzu') {
+      if (roleId == 1 & username != 'TEDS' & username != 'zhuanxiang' & username != 'shangbuzu' & username != 'gongjuzu' & username != 'erji') {
         var res = {
           success: true,
           data: [
@@ -161,7 +163,86 @@ export default {
           ],
           msg: 'success'
         }
-      } else if (roleId == 1 & username == 'TEDS') {
+      }else if(roleId == 1 & username == 'erji'){
+        var res = {
+          success: true,
+          data: [
+          {
+              menuid: 1,
+              icon: 'li-icon-xiangmuguanli',
+              name: '班组查看',
+              hasThird: null,
+              url: null,
+              menus: [
+                {
+                  menuid: 2,
+                  icon: 'icon-cat-skuQuery',
+                  name: '班组列表',
+                  hasThird: 'N',
+                  url: 'teams/check',
+                  menus: null
+                }
+              ]
+            },
+            {
+              menuid: 11,
+              icon: 'li-icon-xiangmuguanli',
+              name: '故障查看',
+              hasThird: null,
+              url: null,
+              menus: [
+                {
+                  menuid: 22,
+                  icon: 'icon-cat-skuQuery',
+                  name: '故障列表',
+                  hasThird: 'N',
+                  url: 'teams/faultcheck',
+                  menus: null
+                }, {
+                  menuid: 55,
+                  icon: 'icon-cat-skuQuery',
+                  name: '车内装饰类故障列表',
+                  hasThird: 'N',
+                  url: 'teams/faultdecorationcheck',
+                  menus: null
+                },
+                {
+                  menuid: 33,
+                  icon: 'icon-cat-skuQuery',
+                  name: '高级修列表',
+                  hasThird: 'N',
+                  url: 'teams/seniorfaultcheck',
+                  menus: null
+                }, {
+                  menuid: 44,
+                  icon: 'icon-cat-skuQuery',
+                  name: '故障追踪列表',
+                  hasThird: 'N',
+                  url: 'teams/trackfaultcheck',
+                  menus: null
+                }
+              ]
+            },
+            {
+              menuid:2,
+              icon: 'li-icon-xiangmuguanli',
+              name: '专项普查',
+              hasThird: null,
+              url: null,
+              menus: [
+                {
+                  menuid: 2,
+                  name: '专项普查（长客）',
+                  hasThird: 'N',
+                  url: 'teamGroup/specific',
+                  menus: null
+                }
+              ] 
+            }
+          ]
+        }
+      } 
+      else if (roleId == 1 & username == 'TEDS') {
         var res = {
           success: true,
           data: [
@@ -352,16 +433,16 @@ export default {
             {
               menuid: 4,
               icon: 'li-icon-xiangmuguanli',
-              name: '审批管理',
+              name: '专项普查',
               hasThird: null,
               url: null,
               menus: [
                 {
                   menuid: 1,
                   icon: 'icon-cat-skuQuery',
-                  name: '简单审批',
+                  name: '专项普查(长客)流程管理',
                   hasThird: 'N',
-                  url: 'technician/approval',
+                  url: 'technician/createSI',
                   menus: null
                 },
               ]
@@ -537,6 +618,169 @@ export default {
 
           ],
           msg: 'success'
+        }
+      } else if (roleId == 5) {
+        var res = {
+          success: true,
+          data: [
+            {
+              menuid: 1,
+              icon: 'li-icon-xiangmuguanli',
+              name: '班组管理',
+              hasThird: null,
+              url: null,
+              menus: [
+                {
+                  menuid: 2,
+                  icon: 'icon-cat-skuQuery',
+                  name: '班组列表',
+                  hasThird: 'N',
+                  url: 'teams/index',
+                  menus: null
+                }
+              ]
+            },
+            {
+              menuid: 3,
+              icon: 'li-icon-xiangmuguanli',
+              name: '故障管理',
+              hasThird: null,
+              url: null,
+              menus: [
+                {
+                  menuid: 4,
+                  icon: 'icon-cat-skuQuery',
+                  name: '故障库',
+                  hasThird: 'N',
+                  url: 'technician/faultcarnumber',
+                  menus: null
+                },
+                {
+                  menuid: 5,
+                  icon: 'icon-cat-skuQuery',
+                  name: '故障遗留列表',
+                  hasThird: 'N',
+                  url: 'technician/fault',
+                  menus: null
+                },
+                {
+                  menuid: 8,
+                  icon: 'icon-cat-skuQuery',
+                  name: '车内装饰类故障列表',
+                  hasThird: 'N',
+                  url: 'technician/faultdecoration',
+                  menus: null
+                }, {
+                  menuid: 6,
+                  icon: 'icon-cat-skuQuery',
+                  name: '高级修列表',
+                  hasThird: 'N',
+                  url: 'technician/senior',
+                  menus: null
+                }, {
+                  menuid: 7,
+                  icon: 'icon-cat-skuQuery',
+                  name: '故障追踪列表',
+                  hasThird: 'N',
+                  url: 'technician/track',
+                  menus: null
+                },
+              ]
+            },
+            {
+              menuid: 11,
+              icon: 'li-icon-xiangmuguanli',
+              name: '源头管理',
+              hasThird: null,
+              url: null,
+              menus: [
+                {
+                  menuid: 22,
+                  icon: 'icon-cat-skuQuery',
+                  name: '源头质量（四方）',
+                  hasThird: 'N',
+                  url: 'source/qualitysquare',
+                  menus: null
+                },
+                {
+                  menuid: 33,
+                  icon: 'icon-cat-skuQuery',
+                  name: '源头质量（长客）',
+                  hasThird: 'N',
+                  url: 'source/qualitylong',
+                  menus: null
+                },
+                {
+                  menuid: 44,
+                  icon: 'icon-cat-skuQuery',
+                  name: '源头质量（动集）',
+                  hasThird: 'N',
+                  url: 'source/qualityconcent',
+                  menus: null
+                },
+                {
+                  menuid: 55,
+                  icon: 'icon-cat-skuQuery',
+                  name: '技术改造（四方）',
+                  hasThird: 'N',
+                  url: 'source/technologysquare',
+                  menus: null
+                },
+                {
+                  menuid: 66,
+                  icon: 'icon-cat-skuQuery',
+                  name: '技术改造（长客）',
+                  hasThird: 'N',
+                  url: 'source/technologylong',
+                  menus: null
+                },
+                {
+                  menuid: 77,
+                  icon: 'icon-cat-skuQuery',
+                  name: '技术改造（动集）',
+                  hasThird: 'N',
+                  url: 'source/technologyconcent',
+                  menus: null
+                }
+
+              ]
+            },
+            {
+              menuid: 4,
+              icon: 'li-icon-xiangmuguanli',
+              name: '专项普查',
+              hasThird: null,
+              url: null,
+              menus: [
+                {
+                  menuid: 1,
+                  icon: 'icon-cat-skuQuery',
+                  name: '专项普查流程管理',
+                  hasThird: 'N',
+                  url: 'changke/changke',
+                  menus: null
+                },
+              ]
+            }
+            // {
+            //   menuid: 111111,
+            //   icon: 'li-icon-xiangmuguanli',
+            //   name: '专项管理',
+            //   hasThird: null,
+            //   url: null,
+            //   menus: [
+            //     {
+            //       menuid: 222222,
+            //       icon: 'icon-cat-skuQuery',
+            //       name: '专项提醒',
+            //       hasThird: 'N',
+            //       url: 'special/index',
+            //       menus: null
+            //     }
+            //   ]
+            // }
+
+          ]
         }
       }
       this.allmenu = res.data

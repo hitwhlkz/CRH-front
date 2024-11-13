@@ -63,7 +63,10 @@ import ToolSecure from '@/view/teamGroup/tool/secure'
 import ToolInsulation from '@/view/teamGroup/tool/insulation'
 
 // 审批
-import Approval from '@/view/technician/approval/approval'
+
+import CreateSI from '@/view/technician/approval/createSI'
+import specific from '@/view/teamGroup/approval/specific'
+import changke from '../view/changke/changke.vue'
 
 Vue.use(Router)
 
@@ -283,14 +286,21 @@ let router = new Router({
 
         // 审批
         {
-          path: '/technician/approval',
-          name: '审批',
-          component: Approval,
-          meta: {
-            requireAuth: true,
-            title: '审批'
-          }
+          path: '/technician/createSI',
+          name: '专项普查管理',
+          component: CreateSI,
         },
+        {
+          path: '/teamGroup/specific',
+          name :'专项普查管理',
+          component: specific,
+        },
+        {
+          path: '/changke/changke',
+          name: '专项普查管理',
+          component: changke,
+        },
+
         // {
         //   path: '/teams/faultcheck',
         //   name: '故障查看',
