@@ -32,6 +32,14 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /\.less$/,
+        use: [
+          'style-loader',
+          'css-loader',
+          'less-loader'
+        ]
+      },
+      {
         test: /\.vue$/,
         loader: 'vue-loader',
         options: vueLoaderConfig
@@ -39,7 +47,12 @@ module.exports = {
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        include: [resolve('src'), resolve('test'), resolve('node_modules/webpack-dev-server/client')]
+        include: [
+          resolve('src'),
+          resolve('test'),
+          resolve('node_modules/webpack-dev-server/client'),
+          resolve('node_modules/x-data-spreadsheet') // 确保处理 x-data-spreadsheet
+        ]
       },
       {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,

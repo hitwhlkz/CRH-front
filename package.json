@@ -12,7 +12,9 @@
   "dependencies": {
     "axios": "^1.5.0",
     "element-ui": "^2.15.14",
+    "exceljs": "^4.4.0",
     "handsontable": "^7.4.2",
+    "luckysheet": "^2.1.13",
     "module": "^1.2.5",
     "quill-image-drop-module": "^1.0.3",
     "quill-image-resize-module": "^3.0.0",
@@ -21,8 +23,10 @@
     "vue": "^2.5.2",
     "vue-quill-editor": "^3.0.6",
     "vue-router": "^3.0.1",
-    "x-data-spreadsheet": "^1.1.9",
-    "xlsx": "^0.18.5"
+    "x-data-spreadsheet": "^1.1.6",
+    "xlsx": "^0.18.5",
+    "xlsx-populate": "^1.21.0",
+    "xlsx-style": "^0.8.13"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",

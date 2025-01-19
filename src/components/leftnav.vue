@@ -41,7 +41,7 @@ export default {
     getRes() {
       let roleId = localStorage.getItem('roleId')
       let username = localStorage.getItem('userName')
-      if (roleId == 1 & username != 'TEDS' & username != 'zhuanxiang' & username != 'shangbuzu' & username != 'gongjuzu' & username != 'erji') {
+      if (roleId == 1 & username != 'TEDS' & username != 'zhuanxiang' & username != 'shangbuzu' & username != 'gongjuzu' & username != 'erji' & username != 'cailiaozu') {
         var res = {
           success: true,
           data: [
@@ -62,41 +62,58 @@ export default {
                 }
               ]
             },
+            // {
+            //   menuid: 11,
+            //   icon: 'li-icon-xiangmuguanli',
+            //   name: '故障查看',
+            //   hasThird: null,
+            //   url: null,
+            //   menus: [
+            //     {
+            //       menuid: 22,
+            //       icon: 'icon-cat-skuQuery',
+            //       name: '故障列表',
+            //       hasThird: 'N',
+            //       url: 'teams/faultcheck',
+            //       menus: null
+            //     }, {
+            //       menuid: 55,
+            //       icon: 'icon-cat-skuQuery',
+            //       name: '车内装饰类故障列表',
+            //       hasThird: 'N',
+            //       url: 'teams/faultdecorationcheck',
+            //       menus: null
+            //     },
+            //     {
+            //       menuid: 33,
+            //       icon: 'icon-cat-skuQuery',
+            //       name: '高级修列表',
+            //       hasThird: 'N',
+            //       url: 'teams/seniorfaultcheck',
+            //       menus: null
+            //     }, {
+            //       menuid: 44,
+            //       icon: 'icon-cat-skuQuery',
+            //       name: '故障追踪列表',
+            //       hasThird: 'N',
+            //       url: 'teams/trackfaultcheck',
+            //       menus: null
+            //     }
+            //   ]
+            // },
             {
-              menuid: 11,
+              menuid: 2,
               icon: 'li-icon-xiangmuguanli',
-              name: '故障查看',
+              name: '部件统计',
               hasThird: null,
               url: null,
               menus: [
                 {
-                  menuid: 22,
+                  menuid: 2,
                   icon: 'icon-cat-skuQuery',
-                  name: '故障列表',
+                  name: '部件追踪',
                   hasThird: 'N',
-                  url: 'teams/faultcheck',
-                  menus: null
-                }, {
-                  menuid: 55,
-                  icon: 'icon-cat-skuQuery',
-                  name: '车内装饰类故障列表',
-                  hasThird: 'N',
-                  url: 'teams/faultdecorationcheck',
-                  menus: null
-                },
-                {
-                  menuid: 33,
-                  icon: 'icon-cat-skuQuery',
-                  name: '高级修列表',
-                  hasThird: 'N',
-                  url: 'teams/seniorfaultcheck',
-                  menus: null
-                }, {
-                  menuid: 44,
-                  icon: 'icon-cat-skuQuery',
-                  name: '故障追踪列表',
-                  hasThird: 'N',
-                  url: 'teams/trackfaultcheck',
+                  url: 'teamGroup/Aumanage/aum',
                   menus: null
                 }
               ]
@@ -241,6 +258,29 @@ export default {
             }
           ]
         }
+      } else if(roleId == 1 & username == 'cailiaozu'){
+        var res = {
+          success: true,
+          data: [
+            {
+              menuid: 11,
+              icon: 'li-icon-xiangmuguanli',
+              name: '故障查看',
+              hasThird: null,
+              url: null,
+              menus: [
+                {
+                  menuid: 22,
+                  icon: 'icon-cat-skuQuery',
+                  name: '故障待料列表',
+                  hasThird: 'N',
+                  url: 'teams/faultmaterial',
+                  menus: null
+                }, 
+              ]
+            }
+          ]
+        }
       } 
       else if (roleId == 1 & username == 'TEDS') {
         var res = {
@@ -304,7 +344,7 @@ export default {
           ],
           msg: 'success'
         }
-      } else if (roleId == 3) {
+      } else if (roleId == 3 & username == 'jishuyuan') {
         var res = {
           success: true,
           data: [
@@ -446,7 +486,24 @@ export default {
                   menus: null
                 },
               ]
-            }
+            },
+            {
+              menuid: 2,
+              icon: 'li-icon-xiangmuguanli',
+              name: '部件统计',
+              hasThird: null,
+              url: null,
+              menus: [
+                {
+                  menuid: 2,
+                  icon: 'icon-cat-skuQuery',
+                  name: '部件追踪',
+                  hasThird: 'N',
+                  url: 'technician/Aumanage/aum',
+                  menus: null
+                }
+              ]
+            },
             // {
             //   menuid: 111111,
             //   icon: 'li-icon-xiangmuguanli',
@@ -780,6 +837,29 @@ export default {
             //   ]
             // }
 
+          ]
+        }
+      } else if (roleId == 3 & username == 'DTdcs'){
+        var res = {
+          success: true,
+          data: [
+          {
+              menuid: 3,
+              icon: 'li-icon-xiangmuguanli',
+              name: '故障管理',
+              hasThird: null,
+              url: null,
+              menus: [
+                {
+                  menuid: 5,
+                  icon: 'icon-cat-skuQuery',
+                  name: 'CRH5A型动车组遗留故障',
+                  hasThird: 'N',
+                  url: 'dtDcs/fault',
+                  menus: null
+                },
+              ]
+            },
           ]
         }
       }

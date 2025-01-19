@@ -28,7 +28,7 @@
                 </el-select>
               </el-form-item>
             </el-col>
-            <el-col :span="8">
+            <!-- <el-col :span="8">
               <el-form-item label="到料" prop="material">
                 <el-select v-model="pageparm.material" placeholder="请选择到料情况" @change="changeInput($event)" clearable style="width: 100%;">
                   <el-option label="无" value="无"></el-option>
@@ -36,7 +36,7 @@
                   <el-option label="是" value="是"></el-option>
                 </el-select>
               </el-form-item>
-            </el-col>
+            </el-col> -->
           </el-row>
 
           <el-row :gutter="20">
@@ -169,7 +169,7 @@
                     {{ scope.row.method == 'null' ? '' : scope.row.method }}
                 </template>
             </el-table-column>
-            <el-table-column prop="material" label="是否到料" width="100" align="center"></el-table-column>
+            <!-- <el-table-column prop="material" label="是否到料" width="100" align="center"></el-table-column> -->
             <el-table-column prop="source" label="故障来源" align="center">
                 <template slot-scope="scope">
                     {{ scope.row.source == 'null' ? '' : scope.row.source }}
@@ -292,10 +292,17 @@
 
         <Pagination v-bind:child-msg="pageparm" v-bind:total="total" @callFather="callFather"></Pagination>
 
-        <!-- <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage"
-            :page-sizes="[ 100 ]" :page-size="100" layout="total, sizes, prev, pager, next, jumper"
+
+        <!-- <el-pagination
             :total="total">
-        </el-pagination> -->
+        </el-pagination>  -->
+        <!-- @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="pageparm.pageNo"
+            :page-sizes="[10, 20, 50, 100]"
+            :page-size="pageparm.pageSize"
+            layout="total, sizes, prev, pager, next, jumper" -->
+        <!-- :page-sizes="[10, 20, 50, 100]"
 
         <!-- 编辑 -->
         <el-dialog :title="title" :visible.sync="editFormVisible" width="50%" :close-on-click-modal="false">
@@ -334,15 +341,15 @@
                 <el-form-item label="处置分类" prop="handle">
                     <el-select v-model="editForm.handle" placeholder="请选择处置分类">
                         <el-option label="已处理" value="已处理"></el-option>
-                        <el-option label="待处理" value="待处理"></el-option>
+                        <el-option label="待料" value="待料"></el-option>
+                        <!-- <el-option label="待处理" value="待处理"></el-option> -->
                         <el-option label="待一级修" value="待一级修"></el-option>
                         <el-option label="待二级修" value="待二级修"></el-option>
                         <el-option label="待扣修" value="待扣修"></el-option>
                         <el-option label="待高级修" value="待高级修"></el-option>
                         <el-option label="待集中处理" value="待集中处理"></el-option>
                         <el-option label="待售后处理" value="待售后处理"></el-option>
-                        <el-option label="待料" value="待料"></el-option>
-                        <el-option label="短期跟踪" value="短期跟踪"></el-option>
+                        <!-- <el-option label="短期跟踪" value="短期跟踪"></el-option> -->
                     </el-select>
                 </el-form-item>
                 <el-form-item label="功能分类" prop="funClass">
@@ -365,7 +372,7 @@
                         <el-option label="其他" value="其他"></el-option>
                     </el-select>
                 </el-form-item>
-                <el-form-item label="到料" prop="material">
+                <!-- <el-form-item label="到料" prop="material">
                     <label slot="label">到料&nbsp;
                         <span style="color:red; font-size: 10px;float: left;width: 300px;line-height: 0;">
                             <br>（无需提料）&nbsp;&nbsp;&nbsp;&nbsp;（待料）&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;（到料）
@@ -376,7 +383,7 @@
                         <el-radio label="否" value="否"></el-radio>
                         <el-radio label="是" value="是"></el-radio>
                     </el-radio-group>
-                </el-form-item>
+                </el-form-item> -->
                 <el-form-item label="处理方法" prop="method">
                     <el-input type="textarea" size="small" v-model="editForm.method" auto-complete="off"
                         placeholder="请输入遗原因；处理法；物料情况；跟踪周期。" @input="handleMethod"></el-input>
@@ -445,7 +452,6 @@ import { baseURL } from '../../../api/base'
 import { carNumberList } from '../.././../common/carNumber'
 import { downloadFile } from '../../../api/FileDownload'
 
-
 export default {
     name: 'Fault',
     components: {
@@ -468,7 +474,6 @@ export default {
                 respDepart: '无',
                 review: '0',
                 review: '',
-
             },
             editTrackForm: {},
             risk: 0,
@@ -482,32 +487,21 @@ export default {
                 funClass: [{ required: true, message: '请选择功能分类', trigger: 'blur' }],
                 handle: [{ required: true, message: '请选择处置分类', trigger: 'blur' }],
                 method: [{ required: true, message: '请输入处理方法', trigger: 'blur' }],
-                source: [{ required: true, message: '请输入障来源', trigger: 'blur' }],
+                source: [{ required: true, message: '请输入故障来源', trigger: 'blur' }],
                 material: [{ required: true, message: '请选择到料情况', trigger: 'blur' }]
             },
             trackRules: {
                 trackPerson: [{ required: true, message: '请输入责任人', trigger: 'blur' }],
                 trackRequire: [{ required: true, message: '请输入追踪要求', trigger: 'blur' }],
-                feedback: [{ required: true, message: '请输入馈', trigger: 'blur' }],
+                feedback: [{ required: true, message: '请输入反馈', trigger: 'blur' }],
             },
             pageparm: {
                 pageNo: 1,
-                pageSize: 10000,
+                pageSize: 100000,
                 result: '未处理',
                 state: '0',
-                // dimension: '',
-                // material: '',
-                // carBodyNumber: '',
-                // faultDescription: '',
-                // schedule: '',
-                // source: '',
-                // method: '',
-                // teamsGroups: '',
-                // funClass: '',
-                // handle: ''
             },
             total: 0,
-            allList: [],
             loading: true,
             teamsList: [],
             riskList: [
@@ -535,8 +529,6 @@ export default {
             previewFile: '',
             fault: {},
             deleteParams: {},
-
-
         }
     },
     created() {
@@ -567,7 +559,6 @@ export default {
             if (this.pageparm.result == '全部') {
                 delete this.pageparm.result
             }
-
         },
         // 重置
         resetForm(formName) {
@@ -622,6 +613,10 @@ export default {
                 // post请求
                 method: 'post',
                 url: baseURL + '/fault/screenfault',
+                params:{
+                    pageNo: this.pageparm.pageNo,
+                    pageSize: this.pageparm.pageSize
+                },
                 // data: this.pageparm
                 data: {
                     ...this.pageparm,
@@ -705,7 +700,7 @@ export default {
         initPage() {
             this.pageparm = {
                 pageNo: 1,
-                pageSize: 10000,
+                pageSize: 10,
                 state: 0,
                 result: '未处理'
             }
@@ -813,6 +808,7 @@ export default {
             if (this.carNumbers.length) {
                 this.pageparm.carNumbers = this.carNumbers
             }
+            console.log(this.pageparm)
             axios({
 
                 // get请求
@@ -828,11 +824,13 @@ export default {
                 // post请求
                 method: 'post',
                 url: baseURL + '/fault/screenfault',
+                params: {
+        pageNo: this.pageparm.pageNo,
+        pageSize: this.pageparm.pageSize
+    },
                 data: {
                     result: '未处理',
                     state: '0',
-                    pageNo: this.pageparm.pageNo,
-                    pageSize: this.pageparm.pageSize
                 }
             }).then(res => {
                 this.tableData = res.data.data.list || []
@@ -847,6 +845,7 @@ export default {
                 })
                 this.total = res.data.data.size
                 this.loading = false
+                console.log('返回数据',res)
             }).catch(err => {
                 console.log(err);
             })
@@ -1245,16 +1244,13 @@ export default {
         },
 
         handleSizeChange(val) {
-            this.pageparm.pageSize = val
-            this.getFault()
-            document.querySelector('.el-main').scrollTo(0, 0)
-            console.log(`每页 ${val} 条`);
+            this.pageparm.pageSize = val;
+            this.pageparm.pageNo = 1;
+            this.getFault();
         },
         handleCurrentChange(val) {
-            this.pageparm.pageNo = val
-            this.getFault()
-            document.querySelector('.el-main').scrollTo(0, 0)
-            console.log(`当前页: ${val}`);
+            this.pageparm.pageNo = val;
+            this.getFault();
         },
         goTeam() {
             this.$router.push({ path: '/teams/index' })

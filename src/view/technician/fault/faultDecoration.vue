@@ -169,7 +169,7 @@
                     {{ scope.row.method == 'null' ? '' : scope.row.method }}
                 </template>
             </el-table-column>
-            <el-table-column prop="material" label="是否到料" width="100" align="center"></el-table-column>
+            <!-- <el-table-column prop="material" label="是否到料" width="100" align="center"></el-table-column> -->
             <el-table-column prop="source" label="故障来源" align="center">
                 <template slot-scope="scope">
                     {{ scope.row.source == 'null' ? '' : scope.row.source }}
@@ -275,8 +275,17 @@
                 </template>
             </el-table-column>
         </el-table>
-
         <Pagination v-bind:child-msg="pageparm" v-bind:total="total" @callFather="callFather"></Pagination>
+
+        <!-- <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="pageparm.pageNo"
+            :page-sizes="[10, 20, 50, 100]"
+            :page-size="pageparm.pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total">
+        </el-pagination> -->
 
 
         <!-- 编辑 -->
@@ -316,7 +325,7 @@
                 <el-form-item label="处置分类" prop="handle">
                     <el-select v-model="editForm.handle" placeholder="请选择处置分类">
                         <el-option label="已处理" value="已处理"></el-option>
-                        <el-option label="待处理" value="待处理"></el-option>
+                        <!-- <el-option label="待处理" value="待处理"></el-option> -->
                         <el-option label="待一级修" value="待一级修"></el-option>
                         <el-option label="待二级修" value="待二级修"></el-option>
                         <el-option label="待扣修" value="待扣修"></el-option>
@@ -347,7 +356,7 @@
                         <el-option label="其他" value="其他"></el-option>
                     </el-select>
                 </el-form-item>
-                <el-form-item label="到料" prop="material">
+                <!-- <el-form-item label="到料" prop="material">
                     <label slot="label">到料&nbsp;
                         <span style="color:red; font-size: 10px;float: left;width: 300px;line-height: 0;">
                             <br>（无需提料）&nbsp;&nbsp;&nbsp;&nbsp;（待料）&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;（到料）
@@ -358,7 +367,7 @@
                         <el-radio label="否" value="否"></el-radio>
                         <el-radio label="是" value="是"></el-radio>
                     </el-radio-group>
-                </el-form-item>
+                </el-form-item> -->
                 <el-form-item label="处理方法" prop="method">
                     <el-input type="textarea" size="small" v-model="editForm.method" auto-complete="off"
                         placeholder="请输入遗留原因；处理方法；物料情况；跟踪周期。" @input="handleMethod"></el-input>
@@ -458,7 +467,7 @@ export default {
             },
             pageparm: {
                 pageNo: 1,
-                pageSize: 10000,
+                pageSize: 100000,
                 result: '未处理',
                 state: '4',
                 // dimension: '',
@@ -586,6 +595,10 @@ export default {
                 // post请求
                 method: 'post',
                 url: baseURL + '/fault/screenfault',
+                params:{
+                    pageNo: this.pageparm.pageNo,
+                    pageSize: this.pageparm.pageSize
+                },
                 // data: this.pageparm
                 data: {
                     ...this.pageparm,
@@ -793,11 +806,13 @@ export default {
                 // post请求
                 method: 'post',
                 url: baseURL + '/fault/screenfault',
+                params: {
+        pageNo: this.pageparm.pageNo,
+        pageSize: this.pageparm.pageSize
+    },
                 data: {
                     result: '未处理',
                     state: '4',
-                    pageNo: this.pageparm.pageNo,
-                    pageSize: this.pageparm.pageSize
                 }
             }).then(res => {
                 this.tableData = res.data.data.list || []
@@ -1189,16 +1204,13 @@ export default {
         },
 
         handleSizeChange(val) {
-            this.pageparm.pageSize = val
-            this.getFault()
-            document.querySelector('.el-main').scrollTo(0, 0)
-            console.log(`每页 ${val} 条`);
+            this.pageparm.pageSize = val;
+            this.pageparm.pageNo = 1;
+            this.getFault();
         },
         handleCurrentChange(val) {
-            this.pageparm.pageNo = val
-            this.getFault()
-            document.querySelector('.el-main').scrollTo(0, 0)
-            console.log(`当前页: ${val}`);
+            this.pageparm.pageNo = val;
+            this.getFault();
         },
         goTeam() {
             this.$router.push({ path: '/teams/index' })

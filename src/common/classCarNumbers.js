@@ -30,6 +30,7 @@ let classCarNumbers = [
         value: 'CRH5A',
         label: 'CRH5A',
         children: [
+            { label: 5020, value: 5020 }, { label: 5022, value: 5022 }, 
             { label: 5025, value: 5025 }, { label: 5027, value: 5027 }, { label: 5031, value: 5031 }, { label: 5032, value: 5032 },
             { label: 5034, value: 5034 }, { label: 5040, value: 5040 }, { label: 5058, value: 5058 }, { label: 5059, value: 5059 },
             { label: 5060, value: 5060 }, { label: 5066, value: 5066 }, { label: 5075, value: 5075 }, { label: 5080, value: 5080 },

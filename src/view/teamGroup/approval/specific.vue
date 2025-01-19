@@ -88,7 +88,7 @@
     </el-table>
 
     <!-- 分页 -->
-    <el-pagination
+    <!-- <el-pagination
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
       :current-page="currentPage"
@@ -96,7 +96,7 @@
       :page-size="pageSize"
       layout="total, sizes, prev, pager, next, jumper"
       :total="total">
-    </el-pagination>
+    </el-pagination> -->
 
     <!-- 新建普查对话框 -->
     <el-dialog
@@ -156,7 +156,8 @@
       display: flex
       :z-index=1
     >
-    <HandsontableComponent :width="'100%'" :height="'100%'" :data="currentSurvey" />
+    <!-- <HandsontableComponent :width="'100%'" :height="'100%'" :data="currentSurvey" /> -->
+     <Sheetjs :width="'100%'" :height="'100%'" :data="currentSurvey" />
     </el-dialog>
 
     <!-- Word文档预览对话框 -->
@@ -232,12 +233,15 @@
 import axios from '../../../api/axios';  // 使用我们配置好的 axios 实例
 import * as XLSX from 'xlsx';
 import HandsontableComponent from '../../../components/HandsontableComponent.vue';
+import Sheetjs from '../../../components/Sheetjs.vue';
+
 
 
 export default {
   name: 'SpecialSurveyManagement',
   components: {
     HandsontableComponent,
+    Sheetjs,
   },
   data() {
     return {
@@ -247,7 +251,7 @@ export default {
       },
       surveyList: [],
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 100000,
       total: 0,
       loading: false,
       dialogVisible: false,
@@ -303,7 +307,7 @@ export default {
       this.loading = true;
       try {
         const timestamp = new Date().getTime();
-        const response = await axios.get(`/api/special-surveys?t=${timestamp}`);
+        const response = await axios.get(`/api/special-surveys?t=${timestamp}&page=${this.currentPage}&size=${100000}`);
         console.log('获取普查列表响应:', response);
         if (response.data && Array.isArray(response.data)) {
           this.surveyList = response.data;

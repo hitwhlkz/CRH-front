@@ -1,8 +1,9 @@
 <template>
-    <div class="special-survey-management">
-      <h1>专项普查管理界面</h1>
-      
-      <!-- 搜索和筛选部分 -->
+  <div class="special-survey-management">
+    <h1>专项普查管理界面</h1>
+
+    <!-- 搜索和新建普查部分 -->
+    <div class="search-and-create-container">
       <el-form :inline="true" :model="searchForm" class="search-form">
         <el-form-item label="普查名称">
           <el-input v-model="searchForm.name" placeholder="请输入普查名称"></el-input>
@@ -17,209 +18,189 @@
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="searchSurveys">搜索</el-button>
+          <el-button type="success" @click="openCreateDialog">新建</el-button>
+          <el-button type="warning" @click="resetForm('searchForm')">重置</el-button>
+          <el-button type="info" @click="exportToExcel">导出</el-button>
         </el-form-item>
       </el-form>
-  
-      <!-- 普查列表 -->
-      <el-table :data="surveyList" style="width: 100%">
-        <el-table-column prop="name" label="普查名称">
-          <template slot-scope="scope">
-            <el-button type="text" @click="openWordDocument(scope.row)">{{ scope.row.name }}</el-button>
-          </template>
-        </el-table-column>
-        <el-table-column label="作业要点">
-          <template slot-scope="scope">
-            <el-link 
-              type="primary" 
-              @click="handleexcelData(scope.row)"
-            >
+    </div>
+
+    <!-- 普查列表 -->
+    <el-table :data="surveyList" style="width: 100%" border>
+      <el-table-column prop="name" label="普查名称">
+        <template slot-scope="scope">
+          <el-button type="text" @click="openWordDocument(scope.row)">{{ scope.row.name }}</el-button>
+        </template>
+      </el-table-column>
+      <el-table-column label="作业要点">
+        <template slot-scope="scope">
+          <el-link type="primary" @click="handleexcelData(scope.row)">
             {{ scope.row.excelData ? '作业要点' : '暂无作业要点' }}
-            </el-link>
-          </template>
-        </el-table-column>
-        <el-table-column label="培训记录表">
-          <template slot-scope="scope">
-            <el-link 
-              type="primary" 
-              @click="handleTrainingData(scope.row)"
-            >
+          </el-link>
+        </template>
+      </el-table-column>
+      <el-table-column label="培训记录表">
+        <template slot-scope="scope">
+          <el-link type="primary" @click="handleTrainingData(scope.row)">
             {{ scope.row.trainingRecordData ? '培训记录' : '暂无培训记录' }}
-            </el-link>
-          </template>
-        </el-table-column>
-        <el-table-column label="普查记录表">
-          <template slot-scope="scope">
-            <el-link 
-              type="primary" 
-              @click="handleSurveyRecord(scope.row)"
-            >
-              {{ scope.row.surveyRecordFilename || '新建普查记录表' }}
-            </el-link>
-          </template>
-        </el-table-column>
-        <el-table-column prop="createdAt" label="建立时间"></el-table-column>
-        <el-table-column prop="manager" label="负责人"></el-table-column>
-        <el-table-column prop="status" label="状态">
-          <template slot-scope="scope">
-            <el-tag :type="getStatusType(scope.row.status)">{{ scope.row.status }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="长客状态">
-          <template slot-scope="scope">
-            {{ getStatusText(scope.row.changkeStatus) }}
-            
-          </template>
-        </el-table-column>
-        <el-table-column label="二级状态">
-          <template slot-scope="scope">
-            {{ getStatusText(scope.row.erjiStatus) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="质检状态">
-          <template slot-scope="scope">
-            {{ getStatusText(scope.row.zhijianStatus) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作">
-          <template slot-scope="scope">
-            <el-button size="small" @click="issueSurvey(scope.row)">下发长客</el-button>
-            <el-button size="small" type="primary" @click="sendToErji(scope.row)">下发二级</el-button>
-            <el-button size="small" type="danger" @click="sendToZhijian(scope.row)">下发质检</el-button>
-            <!-- <el-button v-if="isJishuyuan && scope.row.status === '未下发'" size="small" type="success" @click="issueSurvey(scope.row)">下发</el-button>
-            <el-button v-if="(isChangke || isErji) && (scope.row.changke === 0 || scope.row.erji === 0)" size="small" type="warning" @click="sendToZhijian(scope.row)">送至质检</el-button>
-            <el-button v-if="isZhijian && scope.row.zhijian === 0" size="small" type="info" @click="sendToJishuyuan(scope.row)">送审</el-button> -->
-          </template>
-        </el-table-column>
-      </el-table>
-  
-      <!-- 分页 -->
-      <el-pagination
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        :current-page="currentPage"
-        :page-sizes="[10, 20, 50, 100]"
-        :page-size="pageSize"
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="total">
-      </el-pagination>
-  
-      <!-- 新建普查对话框 -->
-      <el-dialog
-        title="新建专项普查"
-        :visible.sync="dialogVisible"
-        width="50%"
-        :before-close="handleClose"
-      >
-        <el-form :model="newSurvey" label-width="120px">
-          <el-form-item label="普查称" required>
-            <el-input v-model="newSurvey.name" placeholder="请输普查名称"></el-input>
-          </el-form-item>
-          <el-form-item label="普文档" required>
-            <el-upload
-              class="upload-demo"
-              action="#"
-              :on-change="handleDocumentUpload"
-              :auto-upload="false">
-              <el-button size="small" type="primary">上传普查文档</el-button>
-              <template #tip>
-                <div class="el-upload__tip">只能上传 docx 文件，且不超过 10MB</div>
-              </template>
-            </el-upload>
-          </el-form-item>
-          <el-form-item label="作业要点">
-            <el-upload
-              class="upload-demo"
-              action="#"
-              :on-change="handleExcelUpload"
-              :auto-upload="false">
-              <el-button size="small" type="primary">点击上传</el-button>
-              <template #tip>
-                <div class="el-upload__tip">只能上传 xlsx 文件，且不超过 10MB</div>
-              </template>
-            </el-upload>
-          </el-form-item>
-          <el-form-item label="创建时间">
-            <el-input v-model="newSurvey.createdAt" disabled></el-input>
-          </el-form-item>
-        </el-form>
-        <span slot="footer" class="dialog-footer">
-          <el-button @click="closeDialog">取 消</el-button>
-          <el-button type="primary" @click="submitNewSurvey">确 定</el-button>
-        </span>
-      </el-dialog>
-  
-      <!-- 新查按钮 -->
-      <el-button type="primary" @click="openCreateDialog" class="create-button">新建专项普查</el-button>
-  
-      <!-- Excel预览对话框 -->
-      <el-dialog
-        :visible.sync="surveyRecordDialogVisible"
-        width="75%"
-        :fullscreen="false"
-        custom-class="survey-record-dialog"
-        :modal="true"
-        display: flex
-        :z-index=1
-      >
-      <HandsontableComponent :width="'100%'" :height="'100%'" :data="currentSurvey" />
-      </el-dialog>
-  
-      <!-- Word文档预览对话框 -->
-      <el-dialog
-        :title="currentSurvey.name + ' - 普查文档预览'"
-        :visible.sync="wordPreviewVisible"
-        width="90%"
-        :fullscreen="false"
-      >
-        <div class="word-preview-container" style="min-height: 600px;">
-          <div v-if="!wordPreviewContent">正在加载文档...</div>
-          </div>
-      </el-dialog>
-  
-      <!-- 编辑普查对框 -->
-      <el-dialog title="编辑普查" :visible.sync="editDialogVisible">
-        <el-form :model="editingSurvey">
-          <el-form-item label="普查名称">
-            <el-input v-model="editingSurvey.name"></el-input>
-          </el-form-item>
-          <el-form-item label="">
-            <el-input v-model="editingSurvey.manager"></el-input>
-          </el-form-item>
-          <el-form-item label="状态">
-            <el-select v-model="editingSurvey.status">
-              <el-option label="未开" value="未开始"></el-option>
-              <el-option label="进行中" value="进行中"></el-option>
-              <el-option label="已完成" value="已完成"></el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="普查文档">
-            <el-upload
-              action="#"
-              :on-change="handleDocumentFileChange"
-              :auto-upload="false">
-              <el-button size="small" type="primary">选择文件</el-button>
-            </el-upload>
-          </el-form-item>
-          <!-- 添加其他文件上传组件 -->
-        </el-form>
-        <span slot="footer" class="dialog-footer">
-          <el-button @click="editDialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="saveEditedSurvey">确 定</el-button>
-        </span>
-      </el-dialog>
-  
-      <!-- 上传对话框 -->
-      <el-dialog
-      title="上传普查记录表"
-      :visible.sync="uploadDialogVisible"
-      width="50%"
-    >
+          </el-link>
+        </template>
+      </el-table-column>
+      <el-table-column label="普查记录表">
+        <template slot-scope="scope">
+          <el-link type="primary" @click="handleSurveyRecord(scope.row)">
+            {{ scope.row.surveyRecordFilename || '新建普查记录表' }}
+          </el-link>
+        </template>
+      </el-table-column>
+      <el-table-column prop="createdAt" label="建立时间"></el-table-column>
+      <el-table-column prop="manager" label="负责人"></el-table-column>
+      <el-table-column prop="status" label="状态">
+        <template slot-scope="scope">
+          <el-tag :type="getStatusType(scope.row.status)">{{ scope.row.status }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="长客状态">
+        <template slot-scope="scope">
+          {{ getStatusText(scope.row.changkeStatus) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="二级状态">
+        <template slot-scope="scope">
+          {{ getStatusText(scope.row.erjiStatus) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="质检状态">
+        <template slot-scope="scope">
+          {{ getStatusText(scope.row.zhijianStatus) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="180">
+        <template slot-scope="scope">
+          <el-button size="small" type="primary" @click="openDialog(scope.row)">下发</el-button>
+          <el-button size="small" type="danger" @click="deleteSurvey(scope.row)">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <!-- 下发对话框 -->
+    <el-dialog title="选择下发人员" :visible.sync="dialogVisible1" width="30%" @close="resetDialog">
+      <el-form :model="dialogForm">
+        <el-form-item label="下发对象" :label-width="formLabelWidth">
+          <el-checkbox-group v-model="dialogForm.receivers">
+            <el-checkbox label="changke" name="receiver">长客</el-checkbox>
+            <el-checkbox label="erji" name="receiver">二级</el-checkbox>
+            <el-checkbox label="zhijian" name="receiver">质检</el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible1 = false">取消</el-button>
+        <el-button type="primary" @click="submitDialog">确认</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- 新建普查对话框 -->
+    <el-dialog title="新建专项普查" :visible.sync="dialogVisible" width="50%" :before-close="handleClose">
+      <el-form :model="newSurvey" label-width="120px">
+        <el-form-item label="普查名称" required>
+          <el-input v-model="newSurvey.name" placeholder="请输入普查名称"></el-input>
+        </el-form-item>
+        <el-form-item label="普查文档" required>
+          <el-upload
+            class="upload-demo"
+            action="#"
+            :on-change="handleDocumentUpload"
+            :auto-upload="false">
+            <el-button size="small" type="primary">上传普查文档</el-button>
+            <template #tip>
+              <div class="el-upload__tip">只能上传 docx 文件，且不超过 10MB</div>
+            </template>
+          </el-upload>
+        </el-form-item>
+        <el-form-item label="作业要点">
+          <el-upload
+            class="upload-demo"
+            action="#"
+            :on-change="handleExcelUpload"
+            :auto-upload="false">
+            <el-button size="small" type="primary">点击上传</el-button>
+            <template #tip>
+              <div class="el-upload__tip">只能上传 xlsx 文件，且不超过 10MB</div>
+            </template>
+          </el-upload>
+        </el-form-item>
+        <el-form-item label="创建时间">
+          <el-input v-model="newSurvey.createdAt" disabled></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="closeDialog">取 消</el-button>
+        <el-button type="primary" @click="submitNewSurvey">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- Excel预览对话框 -->
+    <el-dialog
+      :visible.sync="surveyRecordDialogVisible"
+      width="75%"
+      :fullscreen="false"
+      custom-class="survey-record-dialog"
+      :modal="true"
+      display: flex
+      :z-index="1">
+      <Sheetjs :width="'100%'" :height="'100%'" :data="currentSurvey"  @upload-success="handleUploadSuccess"/>
+    </el-dialog>
+
+    <!-- Word文档预览对话框 -->
+    <el-dialog
+      :title="currentSurvey.name + ' - 普查文档预览'"
+      :visible.sync="wordPreviewVisible"
+      width="90%"
+      :fullscreen="false">
+      <div class="word-preview-container" style="min-height: 600px;">
+        <div v-if="!wordPreviewContent">正在加载文档...</div>
+      </div>
+    </el-dialog>
+
+    <!-- 编辑普查对话框 -->
+    <el-dialog title="编辑普查" :visible.sync="editDialogVisible">
+      <el-form :model="editingSurvey">
+        <el-form-item label="普查名称">
+          <el-input v-model="editingSurvey.name"></el-input>
+        </el-form-item>
+        <el-form-item label="负责人">
+          <el-input v-model="editingSurvey.manager"></el-input>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="editingSurvey.status">
+            <el-option label="未开始" value="未开始"></el-option>
+            <el-option label="进行中" value="进行中"></el-option>
+            <el-option label="已完成" value="已完成"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="普查文档">
+          <el-upload
+            action="#"
+            :on-change="handleDocumentFileChange"
+            :auto-upload="false">
+            <el-button size="small" type="primary">选择文件</el-button>
+          </el-upload>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="saveEditedSurvey">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- 上传普查记录表对话框 -->
+    <el-dialog title="上传普查记录表" :visible.sync="uploadDialogVisible" width="50%">
       <el-upload
         class="upload-demo"
         action="#"
         :on-change="handleFileChange"
-        :auto-upload="false"
-      >
+        :auto-upload="false">
         <el-button size="small" type="primary">选择文件</el-button>
         <template #tip>
           <div class="el-upload__tip">只能上传 xlsx 文件，且不超过 10MB</div>
@@ -231,18 +212,13 @@
       </span>
     </el-dialog>
 
-    <!-- 上传对话框 -->
-    <el-dialog
-      title="上传作业要点"
-      :visible.sync="uploadexcelDialogVisible"
-      width="50%"
-    >
+    <!-- 上传作业要点对话框 -->
+    <el-dialog title="上传作业要点" :visible.sync="uploadexcelDialogVisible" width="50%">
       <el-upload
         class="upload-demo"
         action="#"
         :on-change="handleexcelFileChange"
-        :auto-upload="false"
-      >
+        :auto-upload="false">
         <el-button size="small" type="primary">选择文件</el-button>
         <template #tip>
           <div class="el-upload__tip">只能上传 xlsx 文件，且不超过 10MB</div>
@@ -253,18 +229,14 @@
         <el-button type="primary" @click="uploadExcelData">确 定</el-button>
       </span>
     </el-dialog>
-    <!-- 上传对话框 -->
-    <el-dialog
-      title="上传培训记录"
-      :visible.sync="uploadtrainingDialogVisible"
-      width="50%"
-    >
+
+    <!-- 上传培训记录对话框 -->
+    <el-dialog title="上传培训记录" :visible.sync="uploadtrainingDialogVisible" width="50%">
       <el-upload
         class="upload-demo"
         action="#"
         :on-change="handletrainingChange"
-        :auto-upload="false"
-      >
+        :auto-upload="false">
         <el-button size="small" type="primary">选择文件</el-button>
         <template #tip>
           <div class="el-upload__tip">只能上传 xlsx 文件，且不超过 10MB</div>
@@ -276,18 +248,24 @@
       </span>
     </el-dialog>
   </div>
-  </template>
+</template>
+
   
   <script>
   import axios from '../../../api/axios';  // 使用我们配置好的 axios 实例
   import * as XLSX from 'xlsx';
   import HandsontableComponent from '../../../components/HandsontableComponent.vue';
+  import Sheetjs from '../../../components/Sheetjs.vue';
+// import Spreadsheet from '../../../components/Spreadsheet.vue';
+
 
 
   export default {
     name: 'SpecialSurveyManagement',
     components: {
       HandsontableComponent,
+      Sheetjs,
+
     },
     data() {
       return {
@@ -297,7 +275,7 @@
         },
         surveyList: [],
         currentPage: 1,
-        pageSize: 10,
+        pageSize: 1000000,
         total: 0,
         loading: false,
         dialogVisible: false,
@@ -333,6 +311,12 @@
         uploadtrainingDialogVisible: false,
       currentSurvey: {},
       uploadDialogVisible: false,
+      dialogVisible1: false,
+      dialogForm: {
+        receiver:[], // 下发对象
+        rowData: null, // 当前行的数据
+      },
+      formLabelWidth: '80px',
       }
     },
     created() {
@@ -353,29 +337,102 @@
     },
     methods: {
       async fetchSurveys() {
-        console.log('开始取普查列表');
-        this.loading = true;
-        try {
-          const timestamp = new Date().getTime();
-          const response = await axios.get(`/api/special-surveys?t=${timestamp}`);
-          console.log('获取普查列表响应:', response);
-          if (response.data && Array.isArray(response.data)) {
-            this.surveyList = response.data;
-            this.total = response.data.length;
-            console.log('更新后的普查列表:', this.surveyList);
-            console.log('数:', this.total);
-          } else {
-            console.error('响应据格式不正确:', response.data);
-            this.$message.error('获取数据式不正确，请系管理员');
-          }
-        } catch (error) {
-          console.error('获取普查列表失败:', error);
-          this.$message.error('获取普查列表失败，请试');
-        } finally {
-          this.loading = false;
-          console.log('取普查列表操作完');
-        }
-      },
+  console.log('开始获取普查列表');
+  this.loading = true;
+  try {
+    const timestamp = new Date().getTime();
+    const response = await axios.get(`/api/special-surveys?t=${timestamp}&page=${this.currentPage}&size=${100000}`);
+    console.log('获取普查列表响应:', response);
+
+    if (response.data && Array.isArray(response.data)) {
+      // 对普查列表按创建时间降序排序
+      this.surveyList = response.data.sort((a, b) => {
+        return new Date(b.createdAt) - new Date(a.createdAt); // 降序排序
+      });
+
+      this.total = parseInt(response.headers['x-total-count'], 10);
+      console.log('更新后的普查列表:', this.surveyList);
+      console.log('总数:', this.total);
+    } else {
+      console.error('响应数据格式不正确:', response.data);
+      this.$message.error('获取数据格式不正确，请联系管理员');
+    }
+  } catch (error) {
+    console.error('获取普查列表失败:', error);
+    this.$message.error('获取普查列表失败，请重试');
+  } finally {
+    this.loading = false;
+    console.log('获取普查列表操作完成');
+  }
+},
+      openDialog(row) {
+        console.log(row);
+  this.dialogForm = {
+    receivers: [], // 确保初始值为空数组
+    rowData: row,
+  };
+  this.dialogVisible1 = true;
+    },
+    // 重置对话框
+    resetDialog() {
+      this.dialogForm = {
+        receivers: [],
+        rowData: null,
+      };
+    },
+    // 提交下发
+    async submitDialog() {
+  if (this.dialogForm.receivers.length === 0) {
+    this.$message.warning('请选择下发对象');
+    return;
+  }
+
+  const { receivers, rowData } = this.dialogForm;
+
+  // 创建一个数组，存储所有需要执行的下发操作
+  const tasks = [];
+
+  if (receivers.includes('changke')) {
+    tasks.push(this.issueSurvey(rowData));
+  }
+  if (receivers.includes('erji')) {
+    tasks.push(this.sendToErji(rowData));
+  }
+  if (receivers.includes('zhijian')) {
+    tasks.push(this.sendToZhijian(rowData));
+  }
+
+  try {
+    // 使用 Promise.allSettled 并行执行所有下发操作
+    const results = await Promise.allSettled(tasks);
+
+    // 检查每个操作的结果
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        console.log(`下发操作 ${index + 1} 成功:`, result.value);
+      } else {
+        console.error(`下发操作 ${index + 1} 失败:`, result.reason);
+      }
+    });
+
+    // 提示用户下发结果
+    const successCount = results.filter((result) => result.status === 'fulfilled').length;
+    if (successCount === tasks.length) {
+      this.$message.success('所有下发操作成功');
+    } else if (successCount > 0) {
+      this.$message.warning(`部分下发操作成功（${successCount}/${tasks.length}）`);
+    } else {
+      this.$message.error('所有下发操作失败');
+    }
+  } catch (error) {
+    console.error('下发失败:', error);
+    this.$message.error('下发失败，请重试');
+  } finally {
+    this.dialogVisible1 = false; // 关闭对话框
+  }
+}
+,
+
       async submitNewSurvey() {
         console.log('开始提交新普查');
         if (!this.newSurvey.name || !this.newSurvey.document) {
@@ -452,7 +509,8 @@
   
         await this.fetchSurveys(); // 提成功后重新获取列
       },
-      async deleteSurvey(survey) {
+      async deleteSurvey(row) {
+        const survey = row;
         console.log('开始删除普查:', survey);
         try {
           await axios.delete(`/api/special-surveys/${survey.id}`);
@@ -539,9 +597,9 @@
       },
       async sendToZhijian(survey) {
         console.log('送至质检:', survey);
-        if (this.isChangke) survey.changke = 1;
-        if (this.isErji) survey.erji = 1;
-        survey.zhijian = 0;
+        // if (this.isChangke) survey.changke = 1;
+        // if (this.isErji) survey.erji = 1;
+        survey.zhijianStatus = 0;
         await this.updateSurvey(survey);
       },
       async sendToErji(survey) {
@@ -555,6 +613,28 @@
         survey.status = '待审核';
         await this.updateSurvey(survey);
       },
+      handleUploadSuccess(updatedSurvey) {
+    console.log('收到 upload-success 事件，数据:', updatedSurvey);
+
+    // 检查 updatedSurvey.id 和 surveyList 中的 id
+    console.log('updatedSurvey.id:', updatedSurvey.id, '类型:', typeof updatedSurvey.id);
+    console.log('surveyList 中的 id:', this.surveyList.map(s => ({ id: s.id, type: typeof s.id })));
+
+    // 查找匹配项的索引
+    const index = this.surveyList.findIndex(s => String(s.id) === String(updatedSurvey.id));
+    console.log('找到的索引:', index);
+
+    if (index !== -1) {
+      // 如果找到匹配项，更新数据
+      this.$set(this.surveyList, index, updatedSurvey);
+    } else {
+      // 如果未找到匹配项，添加新记录
+      console.warn('未找到匹配的项，添加新记录');
+      this.surveyList.push(updatedSurvey);
+    }
+
+    console.log('更新后的 surveyList:', this.surveyList);
+  },
       openCreateDialog() {
         console.log('打开新建对话框');
         this.dialogVisible = true;
@@ -569,6 +649,10 @@
       closeDialog() {
         console.log('关闭对话框');
         this.dialogVisible = false;
+      },
+      closeDialog1() {
+        console.log('关闭对话框');
+        this.dialogVisible1 = false;
       },
       handleClose(done) {
         this.$confirm('确关闭？')
@@ -647,12 +731,13 @@
           });
       },
       handleSizeChange(val) {
-        this.pageSize = val
-        this.fetchSurveys()
+        this.pageSize = val;
+        this.currentPage = 1;
+        this.fetchSurveys();
       },
       handleCurrentChange(val) {
-        this.currentPage = val
-        this.fetchSurveys()
+        this.currentPage = val;
+        this.fetchSurveys();
       },
       searchSurveys() {
         console.log('搜索普查', this.searchForm)
@@ -666,18 +751,9 @@
       },
       
       handleexcelData(survey) {
-        this.currentSurvey.excelData = 0;
-        console.log('处理普查记录:', survey);
-        this.currentSurvey = { ...survey };  // 创建一个副本
-        // // 根据后端数据设置状态
-        // this.currentSurvey.changkeStatus = survey.changkeStatus === -1 ? '未下发' : '已下发';
-        // this.currentSurvey.erjiStatus = survey.erjiStatus === -1 ? '未下发' : '已下发';
-        // this.currentSurvey.zhijianStatus = survey.zhijianStatus === -1 ? '未下发' : '已下发';
-        // this.currentSurvey.status = survey.status || '未开始'; // 初始状态
-  
-        // 直接使用 surveyRecordData 进行解析
-        if (this.currentSurvey.excelData) {
-           // 有数据的情况下解析并下载 Excel 文件
+  this.currentSurvey = { ...survey }; // 创建一个副本
+  if (this.currentSurvey.excelData) {
+    // 如果有数据，解析并下载 Excel 文件
     const base64Data = this.currentSurvey.excelData; // 获取 Base64 编码数据
     const binaryStr = atob(base64Data); // 解码 Base64 字符串
     const len = binaryStr.length;
@@ -690,38 +766,28 @@
     // 创建 Blob 对象
     const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const url = URL.createObjectURL(blob);
-    
+
     // 创建下载链接
     const a = document.createElement('a');
     a.href = url;
-    a.download = this.currentSurvey.surveyRecordFilename || 'survey_record.xlsx'; // 设置文件名
+    a.download = this.currentSurvey.surveyRecordFilename || '作业要点.xlsx'; // 设置文件名
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    
+
     // 释放 URL 对象
     URL.revokeObjectURL(url);
-
-
-        } else {
-            // 如果没有数据，弹出上传对话框
-            this.$message.warning('当前普查记录表不存在，请上传新的记录表。');
-            this.openexcelDialog(); // 打开上传对话框
-        }
-      },
-      handleTrainingData(survey) {
-        this.currentSurvey.trainingRecordData = 0;
-        console.log('处理普查记录:', survey);
-        this.currentSurvey = { ...survey };  // 创建一个副本
-        // // 根据后端数据设置状态
-        // this.currentSurvey.changkeStatus = survey.changkeStatus === -1 ? '未下发' : '已下发';
-        // this.currentSurvey.erjiStatus = survey.erjiStatus === -1 ? '未下发' : '已下发';
-        // this.currentSurvey.zhijianStatus = survey.zhijianStatus === -1 ? '未下发' : '已下发';
-        // this.currentSurvey.status = survey.status || '未开始'; // 初始状态
-  
-        // 直接使用 surveyRecordData 进行解析
-        if (this.currentSurvey.trainingRecordData) {
-           // 有数据的情况下解析并下载 Excel 文件
+  } else {
+    // 如果没有数据，弹出上传对话框
+    this.$message.warning('当前作业要点不存在，请上传新的作业要点。');
+    this.openexcelDialog(); // 打开上传对话框
+  }
+}
+,
+handleTrainingData(survey) {
+  this.currentSurvey = { ...survey }; // 创建一个副本
+  if (this.currentSurvey.trainingRecordData) {
+    // 如果有数据，解析并下载 Excel 文件
     const base64Data = this.currentSurvey.trainingRecordData; // 获取 Base64 编码数据
     const binaryStr = atob(base64Data); // 解码 Base64 字符串
     const len = binaryStr.length;
@@ -734,32 +800,31 @@
     // 创建 Blob 对象
     const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const url = URL.createObjectURL(blob);
-    
+
     // 创建下载链接
     const a = document.createElement('a');
     a.href = url;
-    a.download = this.currentSurvey.surveyRecordFilename || 'survey_record.xlsx'; // 设置文件名
+    a.download = this.currentSurvey.surveyRecordFilename || '培训记录.xlsx'; // 设置文件名
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    
+
     // 释放 URL 对象
     URL.revokeObjectURL(url);
-
-
-        } else {
-            // 如果没有数据，弹出上传对话框
-            this.$message.warning('当前普查记录表不存在，请上传新的记录表。');
-            this.opentrainingDialog(); // 打开上传对话框
-        }
-      },
+  } else {
+    // 如果没有数据，弹出上传对话框
+    this.$message.warning('当前培训记录表不存在，请上传新的培训记录表。');
+    this.opentrainingDialog(); // 打开上传对话框
+  }
+}
+,
       opentrainingDialog(){
           this.uploadtrainingDialogVisible = true;
       },
       openexcelDialog(){
           this.uploadexcelDialogVisible = true;
       },
-      handleSurveyRecord(survey) {
+      handleSurveyRecord(survey) {/*  */
         this.currentSurvey.surveyRecordData = 0;
         console.log('处理普查记录:', survey);
         this.currentSurvey = { ...survey };  // 创建一个副本
@@ -783,103 +848,116 @@
           // 打开上传对话框的逻辑
           this.uploadDialogVisible = true; // 假设您有一个控制上传对话框可见性的变量
       },
-      async uploadExcelData(){
-          // 处理上传文件的逻辑
-          const formData = new FormData();
-          console.log(this.uploadExcelFile)
-          if (this.uploadExcelFile) {
-              formData.append('excelData', this.uploadExcelFile); // 添加上的文件
-          }
-          // const changkeStatus = row.changkeStatus;
-          // const erjiStatus = row.erjiStatus;
-          // const zhijianStatus = row.zhijianStatus;
-          // formData.append('changkeStatus',changkeStatus);
-          // formData.append('erjiStatus',erjiStatus);
-          // formData.append('zhijianStatus',zhijianStatus);
-          console.log('准备新建的数据:');
-          for (let [key, value] of formData.entries()) {
-            console.log(key, value);
-          }
-          try {
-              const response = await axios.put(`/api/special-surveys/${this.currentSurvey.id}`, formData, {
-                  headers: {
-                      'Content-Type': 'multipart/form-data'
-                  }
-              });
-              console.log('上传作业要点成功，响应数据:', response.data);
-              this.$message.success('上传成功');
-  
-          } catch (error) {
-              console.error('上传普查记录失败:', error);
-              this.$message.error('上传失败，请重试');
-          }
+      async uploadExcelData() {
+  const formData = new FormData();
+  if (this.uploadExcelFile) {
+    formData.append('excelData', this.uploadExcelFile); // 添加上传的文件
+  }
+
+  try {
+    const response = await axios.put(`/api/special-surveys/${this.currentSurvey.id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
       },
-      async uploadTrainingData(){
-          // 处理上传文件的逻辑
-          const formData = new FormData();
-          console.log(this.uploadtrainingFile)
-          if (this.uploadtrainingFile) {
-              formData.append('trainingRecordData', this.uploadtrainingFile); // 添加上的文件
-          }
-          // const changkeStatus = row.changkeStatus;
-          // const erjiStatus = row.erjiStatus;
-          // const zhijianStatus = row.zhijianStatus;
-          // formData.append('changkeStatus',changkeStatus);
-          // formData.append('erjiStatus',erjiStatus);
-          // formData.append('zhijianStatus',zhijianStatus);
-          console.log('准备新建的数据:');
-          for (let [key, value] of formData.entries()) {
-            console.log(key, value);
-          }
-          try {
-              const response = await axios.put(`/api/special-surveys/${this.currentSurvey.id}`, formData, {
-                  headers: {
-                      'Content-Type': 'multipart/form-data'
-                  }
-              });
-              console.log('上传作业要点成功，响应数据:', response.data);
-              this.$message.success('上传成功');
-  
-          } catch (error) {
-              console.error('上传普查记录失败:', error);
-              this.$message.error('上传失败，请重试');
-          }
+    });
+
+    // 更新 currentSurvey 数据
+    this.currentSurvey = {
+      ...this.currentSurvey,
+      excelData: response.data.excelData, // 更新作业要点数据
+    };
+
+    // 更新 surveyList 中的数据
+    const index = this.surveyList.findIndex(s => s.id === this.currentSurvey.id);
+    if (index !== -1) {
+      this.$set(this.surveyList, index, {
+        ...this.surveyList[index],
+        excelData: response.data.excelData, // 更新作业要点数据
+      });
+    }
+
+    this.$message.success('上传成功');
+    this.uploadexcelDialogVisible = false; // 关闭上传对话框
+  } catch (error) {
+    console.error('上传作业要点失败:', error);
+    this.$message.error('上传失败，请重试');
+  }
+}
+,
+async uploadTrainingData() {
+  const formData = new FormData();
+  if (this.uploadtrainingFile) {
+    formData.append('trainingRecordData', this.uploadtrainingFile); // 添加上传的文件
+  }
+
+  try {
+    const response = await axios.put(`/api/special-surveys/${this.currentSurvey.id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
       },
+    });
+
+    // 更新 currentSurvey 数据
+    this.currentSurvey = {
+      ...this.currentSurvey,
+      trainingRecordData: response.data.trainingRecordData, // 更新培训记录数据
+    };
+
+    // 更新 surveyList 中的数据
+    const index = this.surveyList.findIndex(s => s.id === this.currentSurvey.id);
+    if (index !== -1) {
+      this.$set(this.surveyList, index, {
+        ...this.surveyList[index],
+        trainingRecordData: response.data.trainingRecordData, // 更新培训记录数据
+      });
+    }
+
+    this.$message.success('上传成功');
+    this.uploadtrainingDialogVisible = false; // 关闭上传对话框
+  } catch (error) {
+    console.error('上传培训记录失败:', error);
+    this.$message.error('上传失败，请重试');
+  }
+}
+,
       async uploadSurveyRecord() {
-          // 处理上传文件的逻辑
-          const formData = new FormData();
-          console.log(this.uploadedFile)
-          if (this.uploadedFile) {
-              formData.append('surveyRecordData', this.uploadedFile); // 添加上的文件
-          }
-          // const changkeStatus = row.changkeStatus;
-          // const erjiStatus = row.erjiStatus;
-          // const zhijianStatus = row.zhijianStatus;
-          // formData.append('changkeStatus',changkeStatus);
-          // formData.append('erjiStatus',erjiStatus);
-          // formData.append('zhijianStatus',zhijianStatus);
-          console.log('准备新建的数据:');
-          for (let [key, value] of formData.entries()) {
-            console.log(key, value);
-          }
-          try {
-              const response = await axios.put(`/api/special-surveys/${this.currentSurvey.id}`, formData, {
-                  headers: {
-                      'Content-Type': 'multipart/form-data'
-                  }
-              });
-              console.log('上传普查记录成功，响应数据:', response.data);
-              this.$message.success('上传成功');
-  
-              // 解析上传的文件内容
-              this.parseExcelData(response.data.surveyRecordData); // 假设后端返回的surveyRecordData是文件内容
-              this.uploadDialogVisible = false; // 关闭上传对话框
-              this.surveyRecordDialogVisible = true; // 打开预览对话框
-          } catch (error) {
-              console.error('上传普查记录失败:', error);
-              this.$message.error('上传失败，请重试');
-          }
-      },
+  const formData = new FormData();
+  if (this.uploadedFile) {
+    formData.append('surveyRecordData', this.uploadedFile);
+  }
+
+  try {
+    const response = await axios.put(`/api/special-surveys/${this.currentSurvey.id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+
+    // 更新 currentSurvey 数据
+    this.currentSurvey = {
+      ...this.currentSurvey,
+      surveyRecordData: response.data.surveyRecordData,
+      surveyRecordFilename: response.data.surveyRecordFilename,
+    };
+
+    // 更新 surveyList 中的数据
+    const index = this.surveyList.findIndex(s => s.id === this.currentSurvey.id);
+    if (index !== -1) {
+      this.$set(this.surveyList, index, {
+        ...this.surveyList[index],
+        surveyRecordData: response.data.surveyRecordData,
+        surveyRecordFilename: response.data.surveyRecordFilename,
+      });
+    }
+
+    this.$message.success('上传成功');
+    this.uploadDialogVisible = false;
+    this.surveyRecordDialogVisible = true; // 打开预览对话框
+  } catch (error) {
+    console.error('上传失败:', error);
+    this.$message.error('上传失败，请重试');
+  }
+}
+
+,
   
       handleFileChange(file) {
           this.uploadedFile = file.raw; // 处理文件选择
@@ -1183,4 +1261,30 @@
   .excel-table .el-textarea__inner {
     resize: none;
   }
+  .search-and-create-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.search-form {
+  flex: 1;
+  margin-right: 20px;
+}
+
+.create-button {
+  white-space: nowrap; /* 防止按钮文字换行 */
+}
+.special-survey-management .el-table .el-table__cell {
+  white-space: normal; /* 允许换行 */
+  word-wrap: break-word; /* 强制长单词换行 */
+}
+
+.special-survey-management .el-table .el-table__cell .el-button {
+  white-space: normal; /* 允许按钮文本换行 */
+  text-align: left; /* 左对齐 */
+}
+
+
   </style>

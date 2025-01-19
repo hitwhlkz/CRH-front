@@ -1,151 +1,173 @@
 <template>
     <div class="fault-component">
+        <el-upload class="upload-demo" :action="`${baseURL}/fault/import`" :on-preview="handlePreview"
+            :on-remove="handleRemove" :before-remove="beforeRemove" multiple :on-exceed="handleExceed"
+            :on-success="handleSuccess" :on-error="handleError">
+            <el-button size="small" type="warning" icon="el-icon-star-on">导入</el-button>
+        </el-upload>
 
+        <br><br>
         <!-- 筛选 -->
         <el-form :inline="true" :model="pageparm" class="user-search" ref="searchForm">
-            <el-row :gutter="20">
-                <el-col :span="8">
-                    <el-form-item label="处理结果：" prop="result">
-                        <el-select v-model="pageparm.result" placeholder="请选择处理结果" @change="changeResultSelect" clearable style="width: 100%;">
-                            <el-option label="全部" value="全部"></el-option>
-                            <el-option label="未处理" value="未处理"></el-option>
-                            <el-option label="已处理" value="已处"></el-option>
-                            <el-option label="长期跟踪" value="长期跟踪"></el-option>
-                        </el-select>
-                    </el-form-item>
-                </el-col>
-                <el-col :span="8">
-                    <el-form-item label="标注" prop="dimension">
-                        <el-select v-model="pageparm.dimension" placeholder="请选择" @change="changeUpdate" clearable style="width: 100%;">
-                            <el-option label="非重点关注" value="0"></el-option>
-                            <el-option label="重点关注" value="1"></el-option>
-                        </el-select>
-                    </el-form-item>
-                </el-col>
-                <el-col :span="8">
-                    <el-form-item label="复核" prop="review">
-                        <el-select v-model="pageparm.review" placeholder="请选择" @change="changeInput($event)" clearable style="width: 100%;">
-                            <el-option label="否" value="0"></el-option>
-                            <el-option label="是" value="1"></el-option>
-                        </el-select>
-                    </el-form-item>
-                </el-col>
-            </el-row>
+          <el-row :gutter="20">
+            <!-- <el-col :span="8">
+              <el-form-item label="处理结果：" prop="result">
+                <el-select disabled  v-model="pageparm.result" placeholder="请选择处理结果" @change="changeResultSelect" clearable style="width: 100%;">
+                  <el-option label="全部" value="全部"></el-option>
+                  <el-option label="未处理" value="未处理"></el-option>
+                  <el-option label="已处理" value="已处理"></el-option>
+                  <el-option label="长期跟踪" value="长期跟踪"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="标注" prop="dimension">
+                <el-select v-model="pageparm.dimension" placeholder="请选择" @change="changeUpdate" clearable style="width: 100%;">
+                  <el-option label="非重点关注" value="0"></el-option>
+                  <el-option label="重点关注" value="1"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="限制" prop="review">
+                <el-select v-model="pageparm.review" placeholder="请选择" @change="changeInput($event)" clearable style="width: 100%;">
+                  <el-option label="否" value="0"></el-option>
+                  <el-option label="是" value="1"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col> -->
+            <!-- <el-col :span="8">
+              <el-form-item label="到料" prop="material">
+                <el-select v-model="pageparm.material" placeholder="请选择到料情况" @change="changeInput($event)" clearable style="width: 100%;">
+                  <el-option label="无" value="无"></el-option>
+                  <el-option label="否" value="否"></el-option>
+                  <el-option label="是" value="是"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col> -->
+          </el-row>
 
-            <el-row :gutter="20">
-                <el-col :span="8">
-                    <el-form-item label="车号" prop="carNumber">
-                        <el-select multiple filterable v-model="carNumbers" placeholder="请选择车号" @change="changeInput($event)" clearable style="width: 100%;">
-                            <el-option v-for="item in carNumberList" :key="item.value" :label="item.value" :value="item.value">
-                            </el-option>
-                        </el-select>
-                    </el-form-item>
-                </el-col>
-                <el-col :span="8">
-                    <el-form-item label="车厢号" prop="carBodyNumber">
-                        <el-input size="small" v-model="pageparm.carBodyNumber" placeholder="输入车厢号"
-                            @input="changeInput($event)"></el-input>
-                    </el-form-item>
-                </el-col>
-                <el-col :span="8">
-                    <el-form-item label="交修日期" class="date-picker-item">
-                        <el-date-picker 
-                            v-model="timeList" 
-                            type="daterange" 
-                            range-separator="至" 
-                            start-placeholder="开始日期" 
-                            end-placeholder="结束日期" 
-                            :picker-options="pickerOptions"
-                            size="mini">
-                        </el-date-picker>
-                    </el-form-item>
-                </el-col>
-            </el-row>
+          <el-row :gutter="20">
+            <el-col :span="8">
+              <el-form-item label="车号" prop="carNumber">
+                <el-select multiple filterable v-model="carNumbers" placeholder="请选择车号" @change="changeInput($event)" clearable style="width: 100%;">
+                  <el-option v-for="item in carNumberList" :key="item.value" :label="item.value" :value="item.value"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="车厢号" prop="carBodyNumber">
+                <el-input size="small" v-model="pageparm.carBodyNumber" placeholder="输入车厢号" @input="changeInput($event)" style="width: 100%;"></el-input>
+              </el-form-item>
+            </el-col>
+            <!-- <el-col :span="8">
+              <el-form-item label="处理方法：" prop="method">
+                <el-input size="small" v-model="pageparm.method" placeholder="输入处理方法" @input="changeInput($event)" style="width: 100%;"></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
 
-            <el-row :gutter="20">
-                <el-col :span="8">
-                    <el-form-item label="故障描述：" prop="faultDescription">
-                        <el-input size="small" v-model="pageparm.faultDescription" placeholder="输入故障描述"
-                            @input="changeInput($event)"></el-input>
-                    </el-form-item>
-                </el-col>
-                <el-col :span="8">
-                    <el-form-item label="故障来源：" prop="source">
-                        <el-input size="small" v-model="pageparm.source" placeholder="输入故障来源"
-                            @input="changeInput($event)"></el-input>
-                    </el-form-item>
-                </el-col>
-                <el-col :span="8">
-                    <el-form-item label="处理方法：" prop="method">
-                        <el-input size="small" v-model="pageparm.method" placeholder="输入处理方法"
-                            @input="changeInput($event)"></el-input>
-                    </el-form-item>
-                </el-col>
-            </el-row>
+          <el-row :gutter="20">-->
+            <el-col :span="8">
+              <el-form-item label="交修日期" class="date-picker-item">
+                <el-date-picker 
+                  v-model="timeList" 
+                  type="daterange" 
+                  range-separator="至" 
+                  start-placeholder="开始日期" 
+                  end-placeholder="结束日期" 
+                  :picker-options="pickerOptions"
+                  size="mini">
+                </el-date-picker>
+              </el-form-item>
+            </el-col> 
+            <!-- <el-col :span="8">
+              <el-form-item label="故障来源：" prop="source">
+                <el-input size="small" v-model="pageparm.source" placeholder="输入故障来源" @input="changeInput($event)" style="width: 100%;"></el-input>
+              </el-form-item>
+            </el-col> -->
+          </el-row>
 
-            <el-row :gutter="20">
-                <el-col :span="8">
-                    <el-form-item label="处理班组" prop="teamsGroups">
-                        <el-select v-model="pageparm.teamsGroups" placeholder="请选择处理班组" @change="changeUpdate" clearable style="width: 100%;">
-                            <el-option v-for="item in teamsList" :key="item.id" :label="item.name" :value="item.name">
-                            </el-option>
-                        </el-select>
-                    </el-form-item>
-                </el-col>
-                <el-col :span="8">
-                    <el-form-item label="功能分类" prop="funClass">
-                        <el-select v-model="pageparm.funClass" placeholder="请选择功能分类" @change="changeUpdate" clearable style="width: 100%;">
-                            <el-option label="整车" value="整车"></el-option>
-                            <el-option label="车体" value="车体"></el-option>
-                            <el-option label="车端连接" value="车端连接"></el-option>
-                            <el-option label="转向架及其辅助" value="转向架及其辅助"></el-option>
-                            <el-option label="主供电" value="主供电"></el-option>
-                            <el-option label="牵引" value="牵引"></el-option>
-                            <el-option label="辅助电气" value="辅助电气"></el-option>
-                            <el-option label="供风制动" value="供风制动"></el-option>
-                            <el-option label="网络及辅助监控" value="网络及辅助监控"></el-option>
-                            <el-option label="旅客信息" value="旅客信息"></el-option>
-                            <el-option label="空调" value="空调"></el-option>
-                            <el-option label="给排水卫生" value="给排水卫生"></el-option>
-                            <el-option label="外门及车内设施" value="外门及车内设施"></el-option>
-                            <el-option label="驾驶设施" value="驾驶设施"></el-option>
-                            <el-option label="电务车载" value="电务车载"></el-option>
-                            <el-option label="其他" value="其他"></el-option>
-                        </el-select>
-                    </el-form-item>
-                </el-col>
-                <el-col :span="8">
-                    <el-form-item label="处置分类" prop="handle">
-                        <el-input size="small" v-model="pageparm.handle" placeholder="输入处置分类"
-                            @input="changeInput($event)"></el-input>
-                    </el-form-item>
-                </el-col>
-            </el-row>
+          <el-row :gutter="20">
+            <el-col :span="8">
+              <el-form-item label="故障描述：" prop="faultDescription">
+                <el-input size="small" v-model="pageparm.faultDescription" placeholder="输入故障描述" @input="changeInput($event)" style="width: 100%;"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="风险等级" prop="risk">
+                <el-select multiple filterable v-model="risks" placeholder="请选择风险级" @change="changeUpdate" clearable style="width: 100%;">
+                  <el-option label="无险" :value="0"></el-option>
+                  <el-option v-for="item in riskList" :key="item.value" :label="item.label" :value="item.value">
+                    <span style="float: left"><el-rate v-model="item.value" :max="item.value" disabled></el-rate></span>
+                  </el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <!-- <el-col :span="8">
+              <el-form-item label="处理方法：" prop="method">
+                <el-input size="small" v-model="pageparm.method" placeholder="输入处理方法" @input="changeInput($event)" style="width: 100%;"></el-input>
+              </el-form-item>
+            </el-col> -->
+            <!-- <el-col :span="8">
+              <el-form-item label="处理班组" prop="teamsGroups">
+                <el-select v-model="pageparm.teamsGroups" placeholder="请选择处理班组" @change="changeUpdate" clearable style="width: 100%;">
+                  <el-option v-for="item in teamsList" :key="item.id" :label="item.name" :value="item.name"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="功能分类" prop="funClass">
+                <el-select v-model="pageparm.funClass" placeholder="请选择功能分类" @change="changeUpdate" clearable style="width: 100%;">
+                  <el-option label="整车" value="整车"></el-option>
+                  <el-option label="车体" value="车体"></el-option>
+                  <el-option label="车端连接" value="车端连接"></el-option>
+                  <el-option label="转向架及其辅助" value="转向架及其辅助"></el-option>
+                  <el-option label="主供电" value="主供电"></el-option>
+                  <el-option label="牵引" value="牵引"></el-option>
+                  <el-option label="辅助电气" value="辅助电气"></el-option>
+                  <el-option label="供风制动" value="供风制动"></el-option>
+                  <el-option label="网络及辅助监控" value="网络及辅助监控"></el-option>
+                  <el-option label="旅客信息" value="旅客信息"></el-option>
+                  <el-option label="空调" value="空调"></el-option>
+                  <el-option label="给排水卫生" value="给排水卫生"></el-option>
+                  <el-option label="外门及车内设施" value="外门及车内设施"></el-option>
+                  <el-option label="驾驶设施" value="驾驶设施"></el-option>
+                  <el-option label="电务车载" value="电务车载"></el-option>
+                  <el-option label="其他" value="其他"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col> -->
+          </el-row>
 
-            <el-row :gutter="20">
-                <el-col :span="12">
-                    <!-- 多选 -->
-                    <el-form-item label="风险等级" prop="risk">
-                        <el-select multiple filterable v-model="risks" placeholder="请选择风险等级" @change="changeUpdate" clearable style="width: 100%;">
-                            <el-option label="无风险" :value="0"></el-option>
-                            <el-option v-for="item in riskList" :key="item.value" :label="item.label" :value="item.value">
-                                <span style="float: left"><el-rate v-model="item.value" :max="item.value" disabled></el-rate></span>
-                            </el-option>
-                        </el-select>
-                    </el-form-item>
-                </el-col>
-                <el-col :span="12">
-                    <el-form-item class="button-group">
-                        <el-button size="small" type="primary" icon="el-icon-search" @click="search()">搜索</el-button>
-                        <el-button size="small" type="warning" icon="el-icon-refresh-right" @click="resetForm('searchForm')">重置</el-button>
-                        <el-button size="small" type="info" icon="el-icon-star-off" @click="exportExcel()">导出</el-button>
-                    </el-form-item>
-                </el-col>
-            </el-row>
+          <el-row :gutter="20">
+            <!-- <el-col :span="8">
+              <el-form-item label="处置分类" prop="handle">
+                <el-input size="small" v-model="pageparm.handle" placeholder="输入处置分类" @input="changeInput($event)" style="width: 100%;"></el-input>
+              </el-form-item>
+            </el-col> -->
+            <!-- <el-col :span="8">
+              <el-form-item label="风险等级" prop="risk">
+                <el-select multiple filterable v-model="risks" placeholder="请选择风险级" @change="changeUpdate" clearable style="width: 100%;">
+                  <el-option label="无险" :value="0"></el-option>
+                  <el-option v-for="item in riskList" :key="item.value" :label="item.label" :value="item.value">
+                    <span style="float: left"><el-rate v-model="item.value" :max="item.value" disabled></el-rate></span>
+                  </el-option>
+                </el-select>
+              </el-form-item>
+            </el-col> -->
+            <el-col :span="8">
+              <el-form-item>
+                <el-button size="small" type="primary" icon="el-icon-search" @click="search()">搜索</el-button>
+                <el-button size="small" type="warning" icon="el-icon-refresh-right" @click="resetForm('searchForm')">重置</el-button>
+                <!-- <el-button size="small" type="success" icon="el-icon-plus" @click="handleEdit()">添加</el-button> -->
+                <el-button size="small" type="info" icon="el-icon-star-off" @click="exportExcel()">导出</el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
         </el-form>
-
-        <!-- 表格 -->
-        <el-table :data="tableData" style="width: 100%" border v-loading="loading" height="600" :row-style="rowStyle">
+        <!-- 格 -->
+        <el-table :data="filteredItems" style="width: 100%" border v-loading="loading" height="600" :row-style="rowStyle">
             <el-table-column type="index" label="序号" align="center" width="70" :index="indexMethod" fixed></el-table-column>
             <el-table-column prop="deliveryDate" label="交修日期" width="100" align="center"></el-table-column>
             <el-table-column prop="carNumber" label="车号" width="70" align="center"></el-table-column>
@@ -189,8 +211,6 @@
                 </template>
             </el-table-column>
 
-            
-
 
 
             <!-- 文件上传 -->
@@ -207,32 +227,21 @@
                 </div>
             </el-dialog>
 
-            <el-table-column prop="" label="操作" width="180" align="center" fixed="right">
-                <template slot-scope="scope">
-                    <el-button type="primary" icon="el-icon-edit" circle
-                        @click="handleEdit(scope.$index, scope.row)"></el-button>
-
-                    <!-- <div style="margin-top: 5px;">
-                        <el-button type="warning" v-if="scope.row.dimension == 1" icon="el-icon-warning" circle
-                            @click="changeDimension(scope.row.id, 0)"></el-button>
-                        <el-button v-else="scope.row.dimension == 0" icon="el-icon-warning-outline" circle
-                            @click="changeDimension(scope.row.id, 1)"></el-button>
-                    </div> -->
-                </template>
-            </el-table-column>
         </el-table>
-        <Pagination v-bind:child-msg="pageparm" v-bind:total="total" @callFather="callFather"></Pagination>
+
+        <Pagination v-bind:child-msg="pageparm" v-bind:total="filteredItems.length" @callFather="callFather"></Pagination>
+
 
         <!-- <el-pagination
-            @size-change="handleSizeChange"
+            :total="total">
+        </el-pagination>  -->
+        <!-- @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
             :current-page="pageparm.pageNo"
             :page-sizes="[10, 20, 50, 100]"
             :page-size="pageparm.pageSize"
-            layout="total, sizes, prev, pager, next, jumper"
-            :total="total">
-        </el-pagination> -->
-
+            layout="total, sizes, prev, pager, next, jumper" -->
+        <!-- :page-sizes="[10, 20, 50, 100]"
 
         <!-- 编辑 -->
         <el-dialog :title="title" :visible.sync="editFormVisible" width="50%" :close-on-click-modal="false">
@@ -271,6 +280,7 @@
                 <el-form-item label="处置分类" prop="handle">
                     <el-select v-model="editForm.handle" placeholder="请选择处置分类">
                         <el-option label="已处理" value="已处理"></el-option>
+                        <el-option label="待料" value="待料"></el-option>
                         <!-- <el-option label="待处理" value="待处理"></el-option> -->
                         <el-option label="待一级修" value="待一级修"></el-option>
                         <el-option label="待二级修" value="待二级修"></el-option>
@@ -278,12 +288,11 @@
                         <el-option label="待高级修" value="待高级修"></el-option>
                         <el-option label="待集中处理" value="待集中处理"></el-option>
                         <el-option label="待售后处理" value="待售后处理"></el-option>
-                        <el-option label="待料" value="待料"></el-option>
                         <el-option label="短期跟踪" value="短期跟踪"></el-option>
                     </el-select>
                 </el-form-item>
                 <el-form-item label="功能分类" prop="funClass">
-                    <el-select v-model="editForm.funClass" placeholder="请选择功能分类">
+                    <el-select v-model="editForm.funClass" placeholder="请选择能分类">
                         <el-option label="整车" value="整车"></el-option>
                         <el-option label="车体" value="车体"></el-option>
                         <el-option label="车端连接" value="车端连接"></el-option>
@@ -316,11 +325,11 @@
                 </el-form-item> -->
                 <el-form-item label="处理方法" prop="method">
                     <el-input type="textarea" size="small" v-model="editForm.method" auto-complete="off"
-                        placeholder="请输入遗留原因；处理方法；物料情况；跟踪周期。" @input="handleMethod"></el-input>
+                        placeholder="请输入遗原因；处理法；物料情况；跟踪周期。" @input="handleMethod"></el-input>
                 </el-form-item>
 
-                <!-- 复核 -->
-                <el-form-item label="复核" prop="review">
+                <!-- 限制 -->
+                <el-form-item label="限制" prop="review">
                     <el-select v-model="editForm.review" placeholder="请选择">
                         <el-option label="否" value="0"></el-option>
                         <el-option label="是" value="1"></el-option>
@@ -356,6 +365,22 @@
             </div>
         </el-dialog>
 
+        <!-- 责任人 -->
+        <el-dialog title="移交追踪列表" :visible.sync="dialogTrackVisible" width="45%" :before-close="handleClose">
+            <el-form label-width="120px" :model="editTrackForm" ref="editTrackForm" :rules="trackRules">
+                <el-form-item label="责任人" prop="trackPerson">
+                    <el-input v-model="editTrackForm.trackPerson" auto-complete="off" placeholder="请输入责任人"></el-input>
+                </el-form-item>
+                <el-form-item label="追踪要求" prop="trackRequire">
+                    <el-input type="textarea" v-model="editTrackForm.trackRequire" auto-complete="off"
+                        placeholder="请输入追踪要求"></el-input>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="dialogTrackVisible = false">取 消</el-button>
+                <el-button type="primary" @click="changeTrack">确 定</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
@@ -366,9 +391,8 @@ import { baseURL } from '../../../api/base'
 import { carNumberList } from '../.././../common/carNumber'
 import { downloadFile } from '../../../api/FileDownload'
 
-
 export default {
-    name: 'FaultDecorate',
+    name: 'Fault',
     components: {
         Pagination
     },
@@ -389,7 +413,6 @@ export default {
                 respDepart: '无',
                 review: '0',
                 review: '',
-
             },
             editTrackForm: {},
             risk: 0,
@@ -409,26 +432,16 @@ export default {
             trackRules: {
                 trackPerson: [{ required: true, message: '请输入责任人', trigger: 'blur' }],
                 trackRequire: [{ required: true, message: '请输入追踪要求', trigger: 'blur' }],
-                feedback: [{ required: true, message: '请输入反馈实现', trigger: 'blur' }],
+                feedback: [{ required: true, message: '请输入反馈', trigger: 'blur' }],
             },
             pageparm: {
                 pageNo: 1,
                 pageSize: 100000,
                 result: '未处理',
-                state: '4',
-                // dimension: '',
-                // material: '',
-                // carBodyNumber: '',
-                // faultDescription: '',
-                // schedule: '',
-                // source: '',
-                // method: '',
-                // teamsGroups: '',
-                // funClass: '',
-                // handle: ''
+                state: '0',
+                handle: '待料'
             },
             total: 0,
-            allList: [],
             loading: true,
             teamsList: [],
             riskList: [
@@ -455,7 +468,9 @@ export default {
             previewDialogVisible: false,
             previewFile: '',
             fault: {},
-            deleteParams: {}
+            deleteParams: {},
+            items: [],
+            filteredItems: [],
         }
     },
     created() {
@@ -472,12 +487,12 @@ export default {
             this.$forceUpdate();
         },
         rowStyle({ row }) {
-            if (row.dimension == 1) {
-                return { 'background': 'antiquewhite' }
-            }
-            if (row.review == 1) {
-                return { 'background': 'rgb(159 199 159)' }
-            }
+            // if (row.dimension == 1) {
+            //     return { 'background': 'antiquewhite' }
+            // }
+            // if (row.review == 1) {
+            //     return { 'background': 'rgb(159 199 159)' }
+            // }
         },
         changeUpdate() {
             this.$forceUpdate()
@@ -486,7 +501,6 @@ export default {
             if (this.pageparm.result == '全部') {
                 delete this.pageparm.result
             }
-
         },
         // 重置
         resetForm(formName) {
@@ -565,6 +579,7 @@ export default {
                 this.total = res.data.data.size
                 this.loading = false
                 this.$message.success('搜索成功')
+                this.filterItems();
             }).catch(err => {
                 this.initPage()
                 this.getFault()
@@ -628,7 +643,7 @@ export default {
         initPage() {
             this.pageparm = {
                 pageNo: 1,
-                pageSize: 10000,
+                pageSize: 10,
                 state: 0,
                 result: '未处理'
             }
@@ -727,7 +742,6 @@ export default {
             // })
         },
         callFather(val) {
-
             this.pageparm.pageNo = val.pageNo
             this.pageparm.pageSize = val.pageSize
             this.searchCurrent()
@@ -737,6 +751,7 @@ export default {
             if (this.carNumbers.length) {
                 this.pageparm.carNumbers = this.carNumbers
             }
+            console.log(this.pageparm)
             axios({
 
                 // get请求
@@ -758,7 +773,8 @@ export default {
     },
                 data: {
                     result: '未处理',
-                    state: '4',
+                    state: '0',
+                    handel: '待料'
                 }
             }).then(res => {
                 this.tableData = res.data.data.list || []
@@ -773,10 +789,15 @@ export default {
                 })
                 this.total = res.data.data.size
                 this.loading = false
+                console.log('返回数据',res)
+                this.filterItems();
             }).catch(err => {
                 console.log(err);
             })
         },
+        filterItems() {
+      this.filteredItems = this.tableData.filter(item => item.handle === '待料');
+    },
         deleteById(row) {
             this.$confirm('此操作将永久删除, 是否继续?', '提示', {
                 confirmButtonText: '确定',
@@ -892,7 +913,7 @@ export default {
                             this.$message.success('修改成功')
                         }).catch(err => {
                             console.log(err)
-                            this.$message.error("请重新提交")
+                            this.$message.error("请重新交")
                         })
                     }
                 } else {
@@ -949,17 +970,38 @@ export default {
             this.risk = 0
         },
         changState(id, state) {
-            // let test = state == 0 ? '故障遗留' ? '高级修'
-            this.$confirm(`此操作将数据提交, 是否继续?`,'提示', {
+            this.$confirm('此操作将数据提交到高级修库, 是否继续?', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'
             }).then(() => {
                 axios({
                     url: ` ${baseURL}/fault/changestate`,
-                    params: { id, state }
+                    params: { id, state: 1 }
                 }).then(res => {
-                    this.$message.success("已转移到故障遗留列表")
+                    this.$message.success("已转移到高级修库")
+                    this.search()
+                }).catch(err => {
+                    this.$message.error('重新提交')
+                })
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消提交'
+                });
+            });
+        },
+        changStateDecoration(id, state) {
+            this.$confirm('此操作将数据提交到车内装饰类故障列表, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                axios({
+                    url: ` ${baseURL}/fault/changestate`,
+                    params: { id, state: 4 }
+                }).then(res => {
+                    this.$message.success("已转移到车内装饰类故障列表")
                     this.search()
                 }).catch(err => {
                     this.$message.error('重新提交')
@@ -994,7 +1036,7 @@ export default {
                             this.dialogTrackVisible = false
                             this.editTrackForm = {}
                         }).catch(err => {
-                            this.$message.error('请重新提交')
+                            this.$message.error('请重新')
                             this.editTrackForm = {}
                         })
                     }).catch(() => {
@@ -1069,7 +1111,7 @@ export default {
             }
         },
         handleFileError(err, file, fileList) {
-            this.$message.error('文件超出大小限制，上传失败，请联系管理员!')
+            this.$message.error('文件超出大小限制，上传失败，请联系理!')
             this.$refs.refName.uploadFiles.splice(this.$refs.refName.uploadFiles.indexOf(file), 1);
             this.$refs.refName.clearFiles();
         },
@@ -1100,7 +1142,7 @@ export default {
                 fileId: row.fileId,
                 faultFileMidId: row.faultFileMidId
             }
-            // 调用接口
+            // 
             this.$confirm('点击后删除，是否确定？', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
@@ -1167,71 +1209,47 @@ export default {
 </script>
 
   <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style>
-.rate_wrap {
-    display: flex;
-    align-items: center;
-}
-
-.uploadFile {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* 添加拖拽时的样式 */
-.uploadFile.drag-over {
-    border-color: #409eff;
-    /* 拖拽时的边框颜色 */
-}
-
-.icon-button {
-    border: none;
-    /* 移除按钮边框 */
-    color: #409eff;
-    /* 设置按钮文字颜色为蓝色 */
-}
-
-/* 设置el-link的默认颜色 */
-.el-link {
-    color: #409eff !important;
-}
-
-.user-search {
-  background: #f9f9f9;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.el-form-item {
-  margin-bottom: 20px;
-}
-
-.el-select, .el-input {
-  border-radius: 4px;
-  transition: border-color 0.2s;
-}
-
-.el-select:hover, .el-input:hover {
-  border-color: #409eff;
-}
-
-.el-button {
-  transition: all 0.3s ease;
-}
-
-.el-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.el-link {
-  color: #409eff !important;
-}
+  <style>
+  .user-search {
+      background: #f9f9f9;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .el-form-item {
+      margin-bottom: 20px;
+  }
+  
+  .el-select, .el-input {
+      border-radius: 4px;
+      transition: border-color 0.2s;
+  }
+  
+  .el-select:hover, .el-input:hover {
+      border-color: #409eff;
+  }
+  
+  .el-button {
+      transition: all 0.3s ease;
+  }
+  
+  .el-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .el-link {
+      color: #409eff !important;
+  }
 
 .user-search .el-form-item {
   margin-bottom: 18px;
+}
+
+.user-search .el-form-item__content {
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .user-search .date-picker-item {
@@ -1270,110 +1288,92 @@ export default {
   padding: 0 1px;
 }
 
-/* 添加动画效果 */
+/* 其他样式保持不变 */
+
+/* 移除表单项的悬停效果 */
 .user-search .el-form-item {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: none;
 }
 
 .user-search .el-form-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transform: none;
+  box-shadow: none;
 }
 
-/* 按钮悬停效果 */
+/* 为每个按钮单独添加悬停效果 */
+.el-button {
+  transition: all 0.3s ease;
+}
+
+.el-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 主要按钮 */
 .el-button--primary:hover {
   background-color: #66b1ff;
   border-color: #66b1ff;
 }
 
+/* 成功按钮 */
 .el-button--success:hover {
   background-color: #85ce61;
   border-color: #85ce61;
 }
 
+/* 警告按钮 */
 .el-button--warning:hover {
   background-color: #ebb563;
   border-color: #ebb563;
 }
 
+/* 危险按钮 */
 .el-button--danger:hover {
   background-color: #f78989;
   border-color: #f78989;
 }
 
+/* 信息按钮 */
 .el-button--info:hover {
   background-color: #a6a9ad;
   border-color: #a6a9ad;
 }
 
+/* 默认按钮 */
 .el-button--default:hover {
   background-color: #ecf5ff;
   color: #409EFF;
   border-color: #c6e2ff;
 }
 
+/* 圆形按钮 */
 .el-button.is-circle:hover {
   transform: translateY(-2px) scale(1.05);
 }
 
-/* 统一输入框高度 */
-.fault-component .user-search .el-input__inner,
-.fault-component .user-search .el-select .el-input__inner,
-.fault-component .user-search .el-date-editor.el-input__inner,
-.fault-component .user-search .el-date-editor.el-range-editor.el-input__inner {
-  height: 32px !important;
-  line-height: 32px !important;
-}
-
-/* 调整日期选择器的内部元素 */
-.fault-component .user-search .el-date-editor .el-range-input {
-  height: 30px !important;
-  line-height: 30px !important;
-}
-
-.fault-component .user-search .el-date-editor .el-range-separator {
-  line-height: 30px !important;
-}
-
-/* 调整选择器的下拉图标位置 */
-.fault-component .user-search .el-select .el-input__icon,
-.fault-component .user-search .el-date-editor .el-input__icon {
-  line-height: 30px !important;
-}
-
-/* 确保多选选择器的标签在一行内显示 */
-.fault-component .user-search .el-select .el-select__tags {
-  height: 30px !important;
-  overflow: hidden;
-}
-
-/* 调整按钮高度以匹配输入框 */
-.fault-component .user-search .el-button {
-  height: 32px !important;
-  line-height: 30px !important;
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
+/* 按钮组样式 */
 .button-group {
-    display: flex;
-    justify-content: flex-end;
+  display: flex;
+  justify-content: flex-end;
 }
 
-.button-group .el-button {
-    margin-left: 10px;
+.button-group .el-button + .el-button {
+  margin-left: 10px;
 }
 
 /* 在小屏幕上调整按钮组的布局 */
 @media (max-width: 768px) {
-    .button-group {
-        justify-content: flex-start;
-        margin-top: 10px;
-    }
-    
-    .button-group .el-button {
-        margin-left: 0;
-        margin-right: 10px;
-    }
+  .button-group {
+    justify-content: flex-start;
+    margin-top: 10px;
+  }
+  
+  .button-group .el-button + .el-button {
+    margin-left: 0;
+    margin-right: 10px;
+  }
 }
+
+/* 其他样式保持不变 */
 </style>

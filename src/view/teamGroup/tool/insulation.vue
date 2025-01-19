@@ -190,6 +190,7 @@ export default {
         }
     },
     created() {
+        console.log('11111')
         this.getTool()
     },
     computed: {
@@ -217,6 +218,7 @@ export default {
             let Y = date.getFullYear()
             const M = (date.getMonth() + 1).toString().padStart(2, '0')
             const D = (date.getDate()).toString().padStart(2, '0')
+            // console.log()
             return Y + "-" + M + "-" + D;
         },
         // 时间差算天数
@@ -249,7 +251,48 @@ export default {
                 console.log(err);
             })
         },
+// getTool() {
+//     console.log('11111');
+//     if (this.becomeTimeList.length) {
+//         this.pageparm.startBecometime = this.getYMDHMS(new Date(this.becomeTimeList[0].toString()));
+//         this.pageparm.endBecometime = this.getYMDHMS(new Date(this.becomeTimeList[1].toString()));
+//     }
+//     console.log('11111');
+//     axios({
+//         url: `${baseURL}/tool/selecttool`,
+//         method: 'post',
+//         data: this.pageparm
+//     }).then(res => {
+//         console.log("获取到的响应数据：", res.data);
+//         this.total = res.data.data.size;
+//         this.toolData = res.data.data.list;
+
+//         // 输出返回的原始工具数据
+//         console.log("获取到的工具数据: ", this.toolData);
+
+//         // 遍历每一项，处理 currentime 和 becometime
+//         this.toolData = this.toolData.map(item => {
+//             // 输出当前时间字段的原始值
+//             console.log("格式化前的 currentime: ", item.currentime);
+
+//             // 设置 currentime 为当前时间
+//             item.currentime = this.getYMDHMS(Date.now());  // 使用当前时间
+//             // 输出格式化后的时间
+//             console.log("格式化后的 currentime: ", item.currentime);
+
+//             item.becometime = this.getYMDHMS(item.becometime);  // 格式化时间
+//             return item;
+//         });
+
+//         this.loading = false;
+//     }).catch(err => {
+//         console.log("请求发生错误: ", err);
+//     });
+// },
+
         handleEdit(index, row) {
+            // 在添加新项时，设置 currentime 为当前时间
+        this.editForm.currentime = this.getYMDHMS(Date.now());
             this.editFormVisible = true
             if (row != undefined && row != 'undefined') {
                 this.title = '修改'

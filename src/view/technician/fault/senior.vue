@@ -155,8 +155,17 @@
                 </template>
             </el-table-column>
         </el-table>
-
         <Pagination v-bind:child-msg="pageparm" v-bind:total="total" @callFather="callFather"></Pagination>
+
+        <!-- <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="pageparm.pageNo"
+            :page-sizes="[10, 20, 50, 100]"
+            :page-size="pageparm.pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total">
+        </el-pagination> -->
 
         <!-- 编辑 -->
         <el-dialog :title="title" :visible.sync="editFormVisible" width="55%" @click="closeDialog('editForm')">
@@ -264,7 +273,7 @@ export default {
             },
             pageparm: {
                 pageNo: 1,
-                pageSize: 10000,
+                pageSize: 100000,
                 state: 1
             },
             total: 0,
@@ -296,6 +305,15 @@ export default {
         }
     },
     methods: {
+        handleSizeChange(val) {
+            this.pageparm.pageSize = val;
+            this.pageparm.pageNo = 1;
+            this.getFault();
+        },
+        handleCurrentChange(val) {
+            this.pageparm.pageNo = val;
+            this.getFault();
+        },
         changeInput(e) {
             this.$forceUpdate();
         },
@@ -331,10 +349,14 @@ export default {
             }
             this.pageparm.state = 1
             this.pageparm.pageNo = 1
-            this.pageparm.pageSize = 10000
+            this.pageparm.pageSize = 100000
             axios({
                 method: 'post',
                 url: baseURL + '/fault/screenfault',
+                params:{
+                    pageNo: this.pageparm.pageNo,
+                    pageSize: this.pageparm.pageSize
+                },
                 data: this.pageparm
             }).then(res => {
                 this.$message.success('搜索成功')
@@ -361,7 +383,7 @@ export default {
         initPage() {
             this.pageparm = {
                 pageNo: 1,
-                pageSize: 10000,
+                pageSize: 10,
             }
         },
         getYMDHMS(val) {
@@ -405,6 +427,10 @@ export default {
             axios({
                 url: baseURL + '/fault/screenfault',
                 method: 'post',
+                params: {
+        pageNo: this.pageparm.pageNo,
+        pageSize: this.pageparm.pageSize
+    },
                 data: this.pageparm
             }).then(res => {
                 this.tableData = res.data.data.list

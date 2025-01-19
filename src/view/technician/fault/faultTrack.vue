@@ -246,8 +246,17 @@
                 </template>
             </el-table-column>
         </el-table>
-
         <Pagination v-bind:child-msg="pageparm" v-bind:total="total" @callFather="callFather"></Pagination>
+
+        <!-- <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="pageparm.pageNo"
+            :page-sizes="[10, 20, 50, 100]"
+            :page-size="pageparm.pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total">
+        </el-pagination> -->
 
         <!-- 编辑 -->
         <el-dialog :title="title" :visible.sync="editFormVisible" width="50%" @click="closeDialog('editForm')">
@@ -499,6 +508,15 @@ export default {
         }
     },
     methods: {
+        handleSizeChange(val) {
+            this.pageparm.pageSize = val;
+            this.pageparm.pageNo = 1;
+            this.getFault();
+        },
+        handleCurrentChange(val) {
+            this.pageparm.pageNo = val;
+            this.getFault();
+        },
         rowStyle({ row }) {
             if (row.dimension == 1) {
                 return { 'background': 'antiquewhite' }
@@ -554,10 +572,14 @@ export default {
                 this.pageparm.endTime = this.getYMDHMS(new Date(this.timeList[1].toString()))
             }
             this.pageparm.pageNo = 1
-            this.pageparm.pageSize = 100000
+            this.pageparm.pageSize = 10
             axios({
                 method: 'post',
                 url: baseURL + '/fault/screenfault',
+                params:{
+                    pageNo: this.pageparm.pageNo,
+                    pageSize: this.pageparm.pageSize
+                },
                 data: this.pageparm
             }).then(res => {
 
@@ -587,7 +609,7 @@ export default {
         initPage() {
             this.pageparm = {
                 pageNo: 1,
-                pageSize: 100000,
+                pageSize: 10,
                 state: 2
             }
         },
@@ -639,6 +661,10 @@ export default {
             axios({
                 url: baseURL + '/fault/screenfault',
                 method: 'post',
+                params: {
+        pageNo: this.pageparm.pageNo,
+        pageSize: this.pageparm.pageSize
+    },
                 data: this.pageparm
             }).then(res => {
                 this.tableData = res.data.data.list || []
@@ -876,7 +902,7 @@ export default {
                 url: baseURL + '/fault/screenfault',
                 data: {
                     pageNo: 1,
-                    pageSize: 100000,
+                    pageSize: 10,
                     id: row.id
                 }
             }).then(res => {

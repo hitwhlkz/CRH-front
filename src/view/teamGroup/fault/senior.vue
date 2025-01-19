@@ -193,7 +193,7 @@ export default {
             }
             this.pageparm.state = 1
             this.pageparm.pageNo = 1
-            this.pageparm.pageSize = 50
+            this.pageparm.pageSize = 100000
             axios({
                 method: 'post',
                 url: baseURL + '/fault/screenfault',

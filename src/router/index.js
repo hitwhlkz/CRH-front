@@ -12,6 +12,8 @@ import FaultRich from '@/view/technician/fault/faultrich'
 import FaultRichCheck from '@/view/technician/fault/faultrichcheck'
 import FaultDecoration from '@/view/technician/fault/faultdecoration'
 import FaultDecorationCheck from '@/view/teamGroup/fault/faultdecoration'
+import FaultMaterialCheck from '@/view/teamGroup/fault/faultmaterial'
+import DtFault from '@/view/dtDcs/fault/fault'
 
 
 
@@ -67,6 +69,8 @@ import ToolInsulation from '@/view/teamGroup/tool/insulation'
 import CreateSI from '@/view/technician/approval/createSI'
 import specific from '@/view/teamGroup/approval/specific'
 import changke from '../view/changke/changke.vue'
+import Aumanage from '@/view/teamGroup/Aumanage/aum'
+import Aumanage1 from '@/view/technician/Aumanage/aum'
 
 Vue.use(Router)
 
@@ -213,9 +217,26 @@ let router = new Router({
           meta: {
             requireAuth: true,
             title: '故障追踪查看'
-          }
+          },
         },
-
+        {
+          path: '/teams/faultmaterial',
+          name: '故障待料查看',
+          component: FaultMaterialCheck,
+          meta: {
+            requireAuth: true,
+            title: '故障待料查看'
+          },
+        },
+        {
+          path: '/dtDcs/fault',
+          name: '大同动车所5型车故障查看',
+          component: DtFault,
+          meta:{
+            requireAuth: true,
+            title: '大同动车所5型车故障查看'
+          },
+        },
         // {
         //   path: '/material/index',
         //   name: '材料审核',
@@ -299,8 +320,16 @@ let router = new Router({
           path: '/changke/changke',
           name: '专项普查管理',
           component: changke,
+        },{
+          path: '/teamGroup/Aumanage/aum',
+          name: '部件统计',
+          component: Aumanage,
         },
-
+        {
+          path: '/technician/Aumanage/aum',
+          name: '部件统计',
+          component: Aumanage1,
+        },
         // {
         //   path: '/teams/faultcheck',
         //   name: '故障查看',

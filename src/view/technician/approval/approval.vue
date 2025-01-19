@@ -92,7 +92,7 @@
     </el-table>
 
     <!-- 分页 -->
-    <el-pagination
+    <!-- <el-pagination
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
       :current-page="currentPage"
@@ -100,7 +100,7 @@
       :page-size="pageSize"
       layout="total, sizes, prev, pager, next, jumper"
       :total="total">
-    </el-pagination>
+    </el-pagination> -->
 
     <!-- 新建普查对话框 -->
     <el-dialog

@@ -66,7 +66,7 @@ export default {
           loading.close()
           localStorage.setItem('roleId', this.params.roleId)
           localStorage.setItem('userName', this.params.userName)
-          if (this.params.roleId == 3) {
+          if (this.params.roleId == 3 & this.params.userName == 'jishuyuan') {
             this.$router.push({
               path: '/technician/fault'
             })
@@ -74,12 +74,18 @@ export default {
             this.$router.push({
               path: '/teamGroup/specific'
             })
-          } else if (this.params.roleId == 1 & this.params.userName != 'gongjuzu') {
+          } else if(this.params.roleId == 1 & this.params.userName == 'shangbuzu'){
             this.$router.push({
-              path: '/teams/faultcheck'
+              path: '/teams/faultdecorationcheck'
+            })
+            console.log('shangbuzu')
+
+          } else if (this.params.roleId == 1 & this.params.userName != 'gongjuzu' & this.params.userName != 'cailiaozu') {
+            this.$router.push({
+              path: '/teamGroup/Aumanage/aum'
             })
             console.log('banzu')
-          } else if (this.params.roleId == 4) {
+          }else if (this.params.roleId == 4) {
             this.$router.push({
               path: '/manager/indexmaterial'
             })
@@ -87,11 +93,21 @@ export default {
             this.$router.push({
               path: '/tool/metering'
             })
+          }else if(this.params.roleId == 1 & this.params.userName == 'cailiaozu') {
+            this.$router.push({
+              path: '/teams/faultmaterial'
+            })
           }else if (this.params.roleId == 5) {
             this.$router.push({
               path: '/technician/fault'
             })
             console.log('changke')
+
+          }else if (this.params.roleId == 3 & this.params.userName == 'DTdcs') {
+            this.$router.push({
+              path: '/dtDcs/fault'
+            })
+            console.log('大同动车所')
 
           }
         } else {
